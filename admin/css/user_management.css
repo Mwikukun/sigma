@@ -1,0 +1,413 @@
+/* === Layout umum === */
+.main-content {
+    flex: 1;
+    padding: 20px 25px;
+    overflow-y: auto;
+    background: #d6edff;
+}
+
+/* === Header / Topbar (sama style-nya kayak dashboard) === */
+.header {
+    background: #2e3a87;
+    color: #fff;
+    border-radius: 10px;
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.header h2 {
+    font-weight: 700;
+}
+
+.header p {
+    font-weight: 400;
+    font-size: 15px;
+    opacity: 0.9;
+}
+
+/* === Toolbar === */
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 25px 0 15px 0;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    padding: 10px 15px;
+    width: 250px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.search-box input {
+    border: none;
+    outline: none;
+    width: 100%;
+    background: transparent;
+    font-size: 14px;
+    color: #333;
+}
+
+.add-btn {
+    background-color: #2e3a87;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    transition: 0.2s;
+}
+
+.add-btn:hover {
+    background-color: #1f2972;
+}
+
+/* === Table Section === */
+.table-container {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background-color: #2e3a87;
+    color: #fff;
+    text-align: left;
+}
+
+th, td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    font-weight: 600;
+    font-size: 15px;
+}
+
+td {
+    font-size: 14px;
+}
+
+.subtext {
+    font-size: 12px;
+    color: #888;
+}
+
+.status.active {
+    color: #2e3a87;
+    font-weight: 600;
+}
+
+/* === Buttons in Table === */
+.edit-btn,
+.delete-btn {
+    border: none;
+    background: none;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 4px;
+    transition: 0.2s;
+}
+
+.edit-btn:hover {
+    color: #007bff;
+}
+
+.delete-btn:hover {
+    color: #d9534f;
+}
+
+/* === Pagination === */
+.pagination {
+    display: flex;
+    justify-content: center;
+    padding: 15px 0;
+}
+
+.page-btn {
+    background-color: #2e3a87;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.page-btn:hover,
+.page-btn.active {
+    background-color: #1f2972;
+}
+
+/* ===== MODAL BASE ===== */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #fff;
+    padding: 1.8rem 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    width: 450px;
+    animation: fadeIn 0.25s ease;
+}
+
+.modal-content.small {
+    width: 320px;
+}
+
+.modal h3 {
+    background-color: #2a378d;
+    color: white;
+    padding: 10px 15px;
+    margin: -1.8rem -2rem 1.2rem -2rem;
+    border-radius: 10px 10px 0 0;
+    font-size: 1.1rem;
+}
+
+.form-row {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 12px;
+}
+
+.form-row label {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.form-row input,
+.form-row select {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    width: 100%;
+}
+
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.btn-cancel,
+.btn-done,
+.btn-delete {
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-weight: 500;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
+    transition: 0.2s;
+}
+
+.btn-cancel {
+    background: #f1f1f1;
+}
+
+.btn-done {
+    background: #2a378d;
+    color: white;
+}
+
+.btn-delete {
+    background: #e63946;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background: #ddd;
+}
+
+.btn-done:hover {
+    background: #1f2a6e;
+}
+
+.btn-delete:hover {
+    background: #c62828;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal {
+    backdrop-filter: blur(4px);
+}
+
+
+
+/* === Modal === */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+}
+
+.modal-content {
+    background-color: white;
+    padding: 25px;
+    border-radius: 10px;
+    width: 500px;
+    margin: 100px auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.form-group {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.input-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.input-box label {
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.input-box input,
+.input-box select {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.cancel-btn,
+.done-btn {
+    padding: 8px 15px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.cancel-btn {
+    background-color: #ccc;
+}
+
+.done-btn {
+    background-color: #2e3a87;
+    color: white;
+}
+
+.done-btn:hover {
+    background-color: #1f2972;
+}
+
+/* === RAPIKAN STUDY PROGRAM & EXPERTISE DI MODAL === */
+.form-row.double {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.form-row.double .input-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-row.double .input-box label {
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.form-row.double .input-box input,
+.form-row.double .input-box select {
+    padding: 9px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    width: 100%;
+    background: #fff;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+/* Efek saat fokus */
+.form-row.double .input-box input:focus,
+.form-row.double .input-box select:focus {
+    border-color: #2e3a87;
+    outline: none;
+    box-shadow: 0 0 4px rgba(46, 58, 135, 0.3);
+}
+
+/* Responsif: kalau layar kecil, otomatis jadi vertikal */
+@media (max-width: 600px) {
+    .form-row.double {
+        flex-direction: column;
+    }
+}
+
+/* Tambah jarak di bawah baris Study Program & Expertise */
+.form-row.double {
+    margin-bottom: 18px;
+    /* kasih jarak biar gak dempet dengan tombol */
+}
+
+/* Supaya input Expertise gak terlalu rapet ke bawah */
+.form-row.double .input-box:last-child {
+    margin-bottom: 0;
+}

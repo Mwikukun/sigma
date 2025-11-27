@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SIGMA - User Management</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/user_management.css" />
+  </head>
+
+  <body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h2 class="logo">SIGMA</h2>
+
+      <p class="section-title">Main</p>
+      <ul>
+        <a href="dashboard.html"
+          ><li><i class="fa fa-house"></i> Dashboard</li></a
+        >
+        <a href="#"
+          ><li class="active"><i class="fa fa-users"></i> User Management</li></a
+        >
+        <a href="document.html"
+          ><li><i class="fa fa-file-alt"></i> Document</li></a
+        >
+        <a href="announcement.html"
+          ><li><i class="fa fa-bullhorn"></i> Announcement</li></a
+        >
+      </ul>
+
+      <p class="section-title">Other</p>
+      <ul>
+        <li><i class="fa fa-database"></i> Logs</li>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main-content">
+      <div class="topbar">
+        <h2>Dashboard <span>Welcome, Admin</span></h2>
+        <div class="topbar-icons">
+          <i class="fa fa-user-circle"></i>
+          <i class="fa fa-cog"></i>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input id="searchBox" type="text" placeholder="🔍 Search user.." class="search-box" />
+        <button class="add-btn" id="openAddBtn">+ Add Users</button>
+      </div>
+
+      <div class="table-container card">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>NIM/NIK</th>
+              <th>Phone Number</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="userTable"></tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- Modal: Add User -->
+    <div class="modal" id="addModal" style="display: none">
+      <div class="modal-content">
+        <h3>Add User</h3>
+        <form id="addUserForm">
+          <div class="form-row">
+            <label>Name</label>
+            <input type="text" id="addName" placeholder="Enter name.." required />
+          </div>
+
+          <div class="form-row">
+            <label>Role</label>
+            <select id="addRole" required>
+              <option value="">-- Select Role --</option>
+              <option value="student">Student</option>
+              <option value="lecturer">Lecturer</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label>Email</label>
+            <input type="email" id="addEmail" placeholder="Enter email.." required />
+          </div>
+
+          <div class="form-row">
+            <label>NIM/NIK</label>
+            <input type="text" id="addNimNik" placeholder="Enter NIM or NIK.." />
+          </div>
+
+          <div class="form-row">
+            <label>Phone Number</label>
+            <input type="text" id="addPhone" placeholder="Enter phone number.." />
+          </div>
+
+          <!-- khusus lecturer -->
+          <div class="form-row double lecturer-only" style="display: none">
+            <div class="input-box">
+              <label>Study Program</label>
+              <select id="addStudyProgram">
+                <option value="">-- Select Study Program --</option>
+              </select>
+            </div>
+
+            <div class="input-box">
+              <label>Expertise</label>
+              <input type="text" id="addExpertise" placeholder="Enter expertise (e.g., Machine Learning)" />
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="addCancelBtn">Cancel</button>
+            <button type="submit" class="btn-done">Add</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Edit User -->
+    <div class="modal" id="editModal" style="display: none">
+      <div class="modal-content">
+        <h3>Edit User</h3>
+        <form id="editUserForm">
+          <input type="hidden" id="editId" />
+
+          <div class="form-row">
+            <label>Name</label>
+            <input type="text" id="editName" required />
+          </div>
+
+          <div class="form-row">
+            <label>Role</label>
+            <select id="editRole" required>
+              <option value="student">Student</option>
+              <option value="lecturer">Lecturer</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label>Email</label>
+            <input type="email" id="editEmail" required />
+          </div>
+
+          <div class="form-row">
+            <label>NIM/NIK</label>
+            <input type="text" id="editNimNik" />
+          </div>
+
+          <div class="form-row">
+            <label>Phone Number</label>
+            <input type="text" id="editPhone" placeholder="Enter phone number.." />
+          </div>
+
+          <!-- lecturer-only edit -->
+          <div class="form-row double lecturer-only" style="display: none">
+            <div class="input-box">
+              <label>Study Program</label>
+              <select id="editStudyProgram">
+                <option value="">-- Select Study Program --</option>
+              </select>
+            </div>
+
+            <div class="input-box">
+              <label>Expertise</label>
+              <input type="text" id="editExpertise" placeholder="Enter expertise (e.g., AI, Software Engineering)" />
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" id="editCancelBtn">Cancel</button>
+            <button type="submit" class="btn-done">Done</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Delete Confirmation -->
+    <div class="modal" id="deleteModal" style="display: none">
+      <div class="modal-content small">
+        <h3>Delete User</h3>
+        <p>
+          Are you sure you want to delete <strong><span id="deleteUserName"></span></strong>?
+        </p>
+        <div class="modal-actions">
+          <button class="btn-cancel" id="deleteCancelBtn">Cancel</button>
+          <button class="btn-delete" id="confirmDeleteBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Font Awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+
+    <script>
+      const BASE_URL = "http://localhost/SIGMA/admin/php/";
+
+      const addBtn = document.getElementById("openAddBtn");
+      const addModal = document.getElementById("addModal");
+      const editModal = document.getElementById("editModal");
+      const deleteModal = document.getElementById("deleteModal");
+      const userTable = document.getElementById("userTable");
+      const searchBox = document.getElementById("searchBox");
+
+      // modal open/close
+      addBtn.addEventListener("click", () => {
+        addModal.style.display = "flex";
+        document.getElementById("addUserForm").reset();
+        document.querySelectorAll(".lecturer-only").forEach((div) => (div.style.display = "none"));
+      });
+      document.getElementById("addCancelBtn").onclick = () => (addModal.style.display = "none");
+      document.getElementById("editCancelBtn").onclick = () => (editModal.style.display = "none");
+      document.getElementById("deleteCancelBtn").onclick = () => (deleteModal.style.display = "none");
+      window.onclick = (e) => {
+        if (e.target === addModal) addModal.style.display = "none";
+        if (e.target === editModal) editModal.style.display = "none";
+        if (e.target === deleteModal) deleteModal.style.display = "none";
+      };
+
+      // tampilkan field tambahan kalau pilih lecturer
+      document.getElementById("addRole").addEventListener("change", (e) => {
+        const role = e.target.value;
+        document.querySelectorAll(".lecturer-only").forEach((div) => {
+          div.style.display = role === "lecturer" ? "flex" : "none";
+        });
+      });
+
+      document.getElementById("editRole").addEventListener("change", (e) => {
+        const role = e.target.value;
+        document.querySelectorAll(".lecturer-only-edit").forEach((div) => {
+          div.style.display = role === "lecturer" ? "flex" : "none";
+        });
+      });
+
+      // load users
+      async function loadUsers() {
+        userTable.innerHTML = `<tr><td colspan="7" style="text-align:center;">Loading...</td></tr>`;
+        try {
+          const res = await fetch(BASE_URL + "get_users.php");
+          const data = await res.json();
+
+          if (!Array.isArray(data) || data.length === 0) {
+            userTable.innerHTML = `<tr><td colspan="7" style="text-align:center;">No users found</td></tr>`;
+            return;
+          }
+
+          userTable.innerHTML = "";
+          data.forEach((u) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${escapeHtml(u.name || "-")}</td>
+              <td>${escapeHtml(u.email || "-")}</td>
+              <td>${escapeHtml(u.user_type || "-")}</td>
+              <td><span class="status active">Active</span></td>
+              <td>${escapeHtml(u.nim_nik || "-")}</td>
+              <td>${escapeHtml(u.phone_number || "-")}</td>
+              <td>
+                <button class="btn-icon edit-btn"
+                  data-id="${u.id}"
+                  data-name="${escapeAttr(u.name)}"
+                  data-email="${escapeAttr(u.email)}"
+                  data-role="${escapeAttr(u.user_type)}"
+                  data-nim="${escapeAttr(u.nim_nik || "")}"
+                  data-phone="${escapeAttr(u.phone_number || "")}">✏️</button>
+                <button class="btn-icon delete-btn"
+                  data-id="${u.id}"
+                  data-name="${escapeAttr(u.name)}">🗑️</button>
+              </td>`;
+            userTable.appendChild(tr);
+          });
+        } catch {
+          userTable.innerHTML = `<tr><td colspan="7" style="text-align:center;color:red;">Failed to load users</td></tr>`;
+        }
+      }
+
+      // tambah user
+      document.getElementById("addUserForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const payload = {
+          name: document.getElementById("addName").value.trim(),
+          role: document.getElementById("addRole").value,
+          email: document.getElementById("addEmail").value.trim(),
+          nim_nik: document.getElementById("addNimNik").value.trim(),
+          phone_number: document.getElementById("addPhone").value.trim(),
+          study_program_id: document.getElementById("addStudyProgram")?.value || null,
+          expertise: document.getElementById("addExpertise")?.value.trim() || null,
+        };
+
+        if (!payload.name || !payload.role || !payload.email) {
+          alert("Name, Role, dan Email wajib diisi.");
+          return;
+        }
+
+        try {
+          const res = await fetch(BASE_URL + "add_user.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json();
+          alert(data.message);
+          if (data.status === "success") {
+            addModal.style.display = "none";
+            loadUsers();
+          }
+        } catch {
+          alert("Terjadi kesalahan saat menambah user.");
+        }
+      });
+
+      // edit user
+      userTable.addEventListener("click", (e) => {
+        const editBtn = e.target.closest(".edit-btn");
+        const delBtn = e.target.closest(".delete-btn");
+
+        if (editBtn) {
+          document.getElementById("editId").value = editBtn.dataset.id;
+          document.getElementById("editName").value = decodeAttr(editBtn.dataset.name);
+          document.getElementById("editEmail").value = decodeAttr(editBtn.dataset.email);
+          document.getElementById("editRole").value = decodeAttr(editBtn.dataset.role) || "student";
+          document.getElementById("editNimNik").value = decodeAttr(editBtn.dataset.nim);
+          document.getElementById("editPhone").value = decodeAttr(editBtn.dataset.phone);
+
+          const role = editBtn.dataset.role;
+          document.querySelectorAll(".lecturer-only-edit").forEach((div) => {
+            div.style.display = role === "lecturer" ? "flex" : "none";
+          });
+
+          editModal.style.display = "flex";
+        }
+
+        if (delBtn) {
+          document.getElementById("deleteUserName").textContent = decodeAttr(delBtn.dataset.name);
+          document.getElementById("confirmDeleteBtn").dataset.id = delBtn.dataset.id;
+          deleteModal.style.display = "flex";
+        }
+      });
+
+      document.getElementById("editUserForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const payload = {
+          id: document.getElementById("editId").value,
+          name: document.getElementById("editName").value.trim(),
+          role: document.getElementById("editRole").value,
+          email: document.getElementById("editEmail").value.trim(),
+          nim_nik: document.getElementById("editNimNik").value.trim(),
+          phone_number: document.getElementById("editPhone").value.trim(),
+          study_program_id: document.getElementById("editStudyProgram")?.value || null,
+          expertise: document.getElementById("editExpertise")?.value.trim() || null,
+        };
+
+        try {
+          const res = await fetch(BASE_URL + "update_user.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json();
+          alert(data.message);
+          if (data.status === "success") {
+            editModal.style.display = "none";
+            loadUsers();
+          }
+        } catch {
+          alert("Terjadi kesalahan saat memperbarui user.");
+        }
+      });
+
+      // delete
+      document.getElementById("confirmDeleteBtn").addEventListener("click", async (e) => {
+        const id = e.target.dataset.id;
+        try {
+          const res = await fetch(BASE_URL + "delete_user.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id }),
+          });
+          const data = await res.json();
+          alert(data.message);
+          if (data.status === "success") {
+            deleteModal.style.display = "none";
+            loadUsers();
+          }
+        } catch {
+          alert("Terjadi kesalahan saat menghapus user.");
+        }
+      });
+
+      // search
+      searchBox.addEventListener("input", (e) => {
+        const q = e.target.value.toLowerCase();
+        userTable.querySelectorAll("tr").forEach((r) => {
+          const name = r.cells[0]?.innerText.toLowerCase() || "";
+          const email = r.cells[1]?.innerText.toLowerCase() || "";
+          r.style.display = name.includes(q) || email.includes(q) ? "" : "none";
+        });
+      });
+
+      function escapeHtml(str) {
+        if (!str && str !== 0) return "";
+        return String(str).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+      }
+      function escapeAttr(str) {
+        if (!str && str !== 0) return "";
+        return String(str).replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+      }
+      function decodeAttr(s) {
+        if (!s && s !== 0) return "";
+        return String(s).replaceAll("&#039;", "'").replaceAll("&quot;", '"');
+      }
+
+      // load study programs ke dropdown
+      async function loadStudyPrograms() {
+        try {
+          const res = await fetch(BASE_URL + "get_study_programs.php");
+          const data = await res.json();
+          const selects = [document.getElementById("addStudyProgram"), document.getElementById("editStudyProgram")];
+          selects.forEach((select) => {
+            select.innerHTML = '<option value="">-- Select Study Program --</option>';
+            data.forEach((sp) => {
+              const opt = document.createElement("option");
+              opt.value = sp.id;
+              opt.textContent = sp.title;
+              select.appendChild(opt);
+            });
+          });
+        } catch (err) {
+          console.error("Gagal memuat study programs:", err);
+        }
+      }
+
+      // init
+      loadStudyPrograms();
+      loadUsers();
+    </script>
+  </body>
+</html>

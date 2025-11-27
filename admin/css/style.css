@@ -1,0 +1,126 @@
+/* =====================
+   RESET & GLOBAL STYLE
+===================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+body {
+    background: #d6edff;
+    display: flex;
+    min-height: 100vh;
+}
+
+/* === SIDEBAR FIX === */
+.sidebar {
+    background-color: #fff;
+    width: 250px;
+    height: 100vh;
+    padding: 20px 25px;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.08);
+    position: fixed;
+    left: 0;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar .logo {
+    font-size: 22px;
+    font-weight: 800;
+    color: #263b80;
+    margin-bottom: 15px;
+}
+
+.sidebar .section-title {
+    color: #888;
+    font-size: 13px;
+    margin: 10px 0 8px 0;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul a {
+    text-decoration: none;
+    /* 👉 Hapus garis bawah */
+    color: #222;
+}
+
+.sidebar ul li {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    transition: 0.2s;
+}
+
+.sidebar ul li i {
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+/* Hover & Active state */
+.sidebar ul li:hover {
+    background-color: #e6ebff;
+    color: #263b80;
+    cursor: pointer;
+}
+
+.sidebar ul li.active {
+    background-color: #263b80;
+    color: #fff;
+}
+
+/* Remove underline when active link clicked */
+.sidebar ul a:hover,
+.sidebar ul a:focus,
+.sidebar ul a:active {
+    text-decoration: none;
+}
+
+
+/* ====== MAIN CONTENT AREA ====== */
+.main-content {
+    margin-left: 250px;
+    padding: 20px;
+    flex: 1;
+    background: #d6edff;
+}
+
+/* ====== NAVBAR / TOPBAR ====== */
+.topbar {
+    background: #2E3A87;
+    color: #fff;
+    border-radius: 10px;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.topbar h2 {
+    font-weight: 700;
+}
+
+.topbar h2 span {
+    font-weight: 400;
+    font-size: 14px;
+    display: block;
+}
+
+.topbar-icons i {
+    font-size: 20px;
+    margin-left: 15px;
+    cursor: pointer;
+}

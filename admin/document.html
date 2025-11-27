@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SIGMA - Document Management</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/document_management.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+  </head>
+
+  <body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h2 class="logo">SIGMA</h2>
+
+      <p class="section-title">Main</p>
+      <ul>
+        <a href="dashboard.html"
+          ><li><i class="fa fa-house"></i> Dashboard</li></a
+        >
+        <a href="user_management.html"
+          ><li><i class="fa fa-users"></i> User Management</li></a
+        >
+        <a href="#"
+          ><li class="active"><i class="fa fa-file-alt"></i> Document</li></a
+        >
+        <a href="announcement.html"
+          ><li><i class="fa fa-bullhorn"></i> Announcement</li></a
+        >
+      </ul>
+
+      <p class="section-title">Other</p>
+      <ul>
+        <li><i class="fa fa-database"></i> Logs</li>
+      </ul>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+      <div class="topbar">
+        <h2>Document <span>Welcome, Admin1</span></h2>
+        <div class="topbar-icons">
+          <i class="fa fa-user-circle"></i>
+          <i class="fa fa-cog"></i>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input type="text" placeholder="🔍 Search Document .." class="search-box" />
+        <button class="export-btn"><i class="fa fa-download"></i> Export</button>
+      </div>
+
+      <div class="table-container card">
+        <table>
+          <thead>
+            <tr>
+              <th>Bab</th>
+              <th>Nama Dokumen</th>
+              <th>Status</th>
+              <th>Pemilik</th>
+              <th>Judul TA</th>
+              <th>Waktu Upload</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Bab 1</td>
+              <td>Bab1.pdf</td>
+              <td><span class="status pending">Pending</span></td>
+              <td>Mhs1</td>
+              <td>Aplikasi Belajar</td>
+              <td>1 Juli 2025, 11.35pm</td>
+              <td>
+                <span onclick="openEdit('Bab 1','Bab1.pdf','Pending','Mhs1','Aplikasi Belajar','1 Juli 2025','11.35pm')" class="aksi-btn">✏️</span>
+                <span onclick="openDelete('Bab1.pdf')" class="aksi-btn">🗑️</span>
+              </td>
+            </tr>
+            <tr>
+              <td>Bab 2</td>
+              <td>Bab2.pdf</td>
+              <td><span class="status revisi">Revisi</span></td>
+              <td>Mhs2</td>
+              <td>Aplikasi Belanja</td>
+              <td>1 Juli 2025, 11.50pm</td>
+              <td>
+                <span onclick="openEdit('Bab 2','Bab2.pdf','Revisi','Mhs2','Aplikasi Belanja','1 Juli 2025','11.50pm')" class="aksi-btn">✏️</span>
+                <span onclick="openDelete('Bab2.pdf')" class="aksi-btn">🗑️</span>
+              </td>
+            </tr>
+            <tr>
+              <td>Bab 3</td>
+              <td>Bab3.pdf</td>
+              <td><span class="status disetujui">Disetujui</span></td>
+              <td>Mhs3</td>
+              <td>Aplikasi Game</td>
+              <td>2 Juli 2025, 11.35pm</td>
+              <td>
+                <span onclick="openEdit('Bab 3','Bab3.pdf','Disetujui','Mhs3','Aplikasi Game','2 Juli 2025','11.35pm')" class="aksi-btn">✏️</span>
+                <span onclick="openDelete('Bab3.pdf')" class="aksi-btn">🗑️</span>
+              </td>
+            </tr>
+            <tr>
+              <td>Bab 4</td>
+              <td>Bab4.pdf</td>
+              <td><span class="status revisi">Revisi</span></td>
+              <td>Mhs4</td>
+              <td>Aplikasi Katalog</td>
+              <td>3 Juli 2025, 11.50pm</td>
+              <td>
+                <span onclick="openEdit('Bab 4','Bab4.pdf','Revisi','Mhs4','Aplikasi Katalog','3 Juli 2025','11.50pm')" class="aksi-btn">✏️</span>
+                <span onclick="openDelete('Bab4.pdf')" class="aksi-btn">🗑️</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- Modal Edit -->
+    <div class="modal" id="editModal">
+      <div class="modal-content">
+        <h3>Edit Document</h3>
+        <form id="editForm">
+          <div class="form-row">
+            <label>Bab</label>
+            <input type="text" id="editBab" />
+          </div>
+          <div class="form-row">
+            <label>Status</label>
+            <select id="editStatus">
+              <option>Pending</option>
+              <option>Revisi</option>
+              <option>Disetujui</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>Nama Dokumen</label>
+            <input type="text" id="editNama" />
+          </div>
+          <div class="form-row">
+            <label>Pemilik</label>
+            <input type="text" id="editPemilik" />
+          </div>
+          <div class="form-row">
+            <label>Judul TA</label>
+            <input type="text" id="editJudul" />
+          </div>
+          <div class="form-row">
+            <label>Date</label>
+            <input type="text" id="editDate" />
+          </div>
+          <div class="form-row">
+            <label>Time</label>
+            <input type="text" id="editTime" />
+          </div>
+          <div class="form-row">
+            <label>Document</label>
+            <div class="file-drop">📎 Drag files here</div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-cancel" onclick="closeEdit()">Cancel</button>
+            <button type="submit" class="btn-done">Done</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Delete -->
+    <div class="modal" id="deleteModal">
+      <div class="modal-content small">
+        <h3>Delete Document</h3>
+        <p>Are you sure you want to delete <span id="deleteDocName"></span>?</p>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="closeDelete()">Cancel</button>
+          <button class="btn-delete" onclick="confirmDelete()">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // === MODAL EDIT ===
+      function openEdit(bab, nama, status, pemilik, judul, date, time) {
+        document.getElementById("editBab").value = bab;
+        document.getElementById("editNama").value = nama;
+        document.getElementById("editStatus").value = status;
+        document.getElementById("editPemilik").value = pemilik;
+        document.getElementById("editJudul").value = judul;
+        document.getElementById("editDate").value = date;
+        document.getElementById("editTime").value = time;
+        document.getElementById("editModal").style.display = "flex";
+      }
+      function closeEdit() {
+        document.getElementById("editModal").style.display = "none";
+      }
+
+      // === MODAL DELETE ===
+      let docToDelete = null;
+      function openDelete(name) {
+        docToDelete = name;
+        document.getElementById("deleteDocName").textContent = name;
+        document.getElementById("deleteModal").style.display = "flex";
+      }
+      function closeDelete() {
+        document.getElementById("deleteModal").style.display = "none";
+      }
+      function confirmDelete() {
+        alert("Document " + docToDelete + " deleted!");
+        closeDelete();
+      }
+
+      // Close modal if clicked outside
+      window.onclick = function (e) {
+        if (e.target.classList.contains("modal")) {
+          closeEdit();
+          closeDelete();
+        }
+      };
+    </script>
+  </body>
+</html>

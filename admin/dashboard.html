@@ -1,0 +1,102 @@
+<?php
+session_start();
+if (!isset($_SESSION['admin_logged_in'])) {
+  header("Location: login_admin.html");
+  exit;
+}
+?>
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SIGMA - Dashboard Admin</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="js/script.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <h2 class="logo">SIGMA</h2>
+
+        <p class="section-title">Main</p>
+        <ul>
+          <li class="active"><i class="fa fa-house"></i> Dashboard</li>
+          <a href="user_management.html"
+            ><li><i class="fa fa-users"></i> User Management</li></a
+          >
+          <a href="document.html"
+            ><li><i class="fa fa-file-alt"></i> Document</li></a
+          >
+          <a href="announcement.html"
+            ><li><i class="fa fa-bullhorn"></i> Announcement</li></a
+          >
+        </ul>
+
+        <p class="section-title">Other</p>
+        <ul>
+          <li><i class="fa fa-database"></i> Logs</li>
+        </ul>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="topbar">
+          <h2>Dashboard <span>Welcome, Admin1</span></h2>
+          <div class="topbar-icons">
+            <i class="fa fa-user-circle"></i>
+            <i class="fa fa-cog"></i>
+          </div>
+        </div>
+
+        <!-- Cards -->
+        <div class="cards">
+          <div class="card">
+            <h3>Total Users</h3>
+            <p>4 Users</p>
+          </div>
+          <div class="card">
+            <h3>Pending Reviews</h3>
+            <p>1 Document</p>
+          </div>
+          <div class="card">
+            <h3>Total Document</h3>
+            <p>4 Documents</p>
+          </div>
+          <div class="card">
+            <h3>Active Users</h3>
+            <p>4 Users</p>
+          </div>
+        </div>
+
+        <!-- Chart + Activity -->
+        <div class="content-section">
+          <div class="chart-card card">
+            <h3>Document Status</h3>
+            <canvas id="docChart"></canvas>
+            <div class="legend">
+              <span><span class="dot pending"></span> Pending</span>
+              <span><span class="dot approved"></span> Approved</span>
+              <span><span class="dot revised"></span> Revised</span>
+            </div>
+          </div>
+
+          <div class="activity-card card">
+            <h3>Recent Activity</h3>
+            <ul class="activity-list">
+              <li><strong>3 July 2025, 11:50pm</strong> — Bab 4 (Aplikasi Katalog) was submitted (Revisi) by Mhs4</li>
+              <li><strong>2 July 2025, 11:35pm</strong> — Bab 3 (Aplikasi Game) was approved (Disetujui) by Mhs3</li>
+              <li><strong>1 July 2025, 11:50pm</strong> — Bab 2 (Aplikasi Belanja) was submitted (Revisi) by Mhs2</li>
+              <li class="inactive"><strong>1 July 2025, 11:35pm</strong> — Bab 1 (Aplikasi Belajar) was submitted (Pending) by Mhs1</li>
+            </ul>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+  </body>
+</html>

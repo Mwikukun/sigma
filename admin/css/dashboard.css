@@ -1,0 +1,160 @@
+/* =====================
+   MAIN CONTENT
+===================== */
+.main-content {
+    margin-left: 250px;
+    padding: 25px;
+    width: calc(100% - 250px);
+    background-color: #d8ecff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* =====================
+   DASHBOARD CARDS
+===================== */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    text-align: center;
+}
+
+.card h3 {
+    color: #2e3a87;
+    font-size: 15px;
+}
+
+.card p {
+    font-weight: 600;
+    margin-top: 5px;
+}
+
+/* =====================
+   CONTENT SECTION
+===================== */
+.content-section {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+/* =====================
+   CHART CARD
+===================== */
+.chart-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.chart-card canvas {
+    width: 100%;
+    max-width: 320px;
+    max-height: 320px;
+    height: auto;
+}
+
+.legend {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    font-size: 13px;
+    margin-top: 10px;
+}
+
+.dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.dot.pending {
+    background: orange;
+}
+
+.dot.approved {
+    background: limegreen;
+}
+
+.dot.revised {
+    background: red;
+}
+
+/* =====================
+   ACTIVITY CARD
+===================== */
+.activity-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    overflow-y: auto;
+    height: 100%;
+    text-align: left;
+    /* teks rata kiri */
+}
+
+.activity-card .chart-header {
+    text-align: left;
+    font-weight: 600;
+    color: #2e3a87;
+    margin-bottom: 10px;
+}
+
+.activity-list {
+    list-style: none;
+    font-size: 13px;
+    color: #333;
+}
+
+.activity-list li {
+    margin-bottom: 10px;
+}
+
+.activity-list li.inactive {
+    color: #aaa;
+}
+
+/* =====================
+   RESPONSIVE
+===================== */
+@media (max-width: 1024px) {
+    .cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .content-section {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        box-shadow: none;
+    }
+
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+}
