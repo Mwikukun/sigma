@@ -1,4 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:testtt/config.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -9,128 +13,187 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController(
-    text: "Nama Mahasiswa",
-  );
-  final TextEditingController _nimController = TextEditingController(
-    text: "123456789",
-  );
-  final TextEditingController _emailController = TextEditingController(
-    text: "mahasiswa@example.com",
-  );
-  final TextEditingController _phoneController = TextEditingController(
-    text: "08123456789",
-  );
+
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _nimController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+
+  bool isLoading = true;
 
   @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  // ================= LOAD PROFILE =================
+  Future<void> _loadProfile() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final studentNumber = prefs.getInt('student_number');
+
+      if (studentNumber == null) {
+        setState(() => isLoading = false);
+        return;
+      }
+
+      final res = await http.post(
+        Uri.parse("${Config.baseUrl}get_edit_student_profile.php"),
+        body: {"student_number": studentNumber.toString()},
+      );
+
+      final data = jsonDecode(res.body);
+
+      if (data['success'] == true) {
+        final d = data['data'];
+
+        setState(() {
+          _nameController.text = d['name'] ?? "";
+          _nimController.text = d['student_number'].toString();
+          _emailController.text = d['email'] ?? "";
+          _phoneController.text = d['phone_number'] ?? "";
+          isLoading = false;
+        });
+      } else {
+        isLoading = false;
+      }
+    } catch (e) {
+      debugPrint("ERROR LOAD PROFILE: $e");
+      setState(() => isLoading = false);
+    }
+  }
+
+  // ================= UPDATE PROFILE =================
+  Future<void> _updateProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final studentNumber = prefs.getInt('student_number');
+
+    if (studentNumber == null) return;
+
+    final res = await http.post(
+      Uri.parse("${Config.baseUrl}update_student_profile.php"),
+      body: {
+        "student_number": studentNumber.toString(),
+        "name": _nameController.text,
+        "email": _emailController.text,
+        "phone_number": _phoneController.text,
+      },
+    );
+
+    final data = jsonDecode(res.body);
+
+    if (data['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Profil berhasil diperbarui")),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(data['message'] ?? "Gagal update profil")),
+      );
+    }
+  }
+
+  // ================= UI =================
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xffEAF2FF),
-      appBar: AppBar(
-        backgroundColor: const Color(0xff2E3A87),
-        title: const Text(
-          "Edit Profile",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: Padding(
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
         padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              const SizedBox(height: 10),
-              Center(
-                child: Stack(
+        decoration: BoxDecoration(
+          color: const Color(0xFF6ECFF6), // 🔵 WARNA POPUP
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Color(0xffBFD8FF),
-                      child: Icon(Icons.person, size: 70, color: Colors.grey),
+                    const Text(
+                      "Edit Profile",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xff2E3A87),
+                      ),
                     ),
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          color: Color(0xff2E3A87),
-                          shape: BoxShape.circle,
+                    const SizedBox(height: 16),
+
+                    _buildTextField("Nama Lengkap", _nameController),
+                    _buildTextField("NIM", _nimController, enabled: false),
+                    _buildTextField("Email", _emailController),
+                    _buildTextField("No. Telepon", _phoneController),
+
+                    const SizedBox(height: 20),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xff2E3A87),
                         ),
-                        child: const Padding(
-                          padding: EdgeInsets.all(6.0),
-                          child: Icon(
-                            Icons.edit,
-                            size: 20,
-                            color: Colors.white,
-                          ),
+                        onPressed: _updateProfile,
+                        child: const Text(
+                          "Simpan",
+                          style: TextStyle(color: Colors.white),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 30),
-
-              // Form Fields
-              _buildTextField("Nama Lengkap", _nameController),
-              _buildTextField("NIM", _nimController),
-              _buildTextField("Email", _emailController),
-              _buildTextField("No. Telepon", _phoneController),
-
-              const SizedBox(height: 30),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xff2E3A87),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Profil berhasil diperbarui!"),
-                        backgroundColor: Color(0xff2E3A87),
-                      ),
-                    );
-                  }
-                },
-                child: const Text(
-                  "Simpan",
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: TextFormField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    bool enabled = true,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xff2E3A87), // 🟣 LABEL
+            fontWeight: FontWeight.bold,
           ),
         ),
-        validator: (value) =>
-            value == null || value.isEmpty ? "Harap isi $label" : null,
-      ),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          enabled: enabled,
+          style: const TextStyle(color: Colors.black87),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: const Color(0xFFAAE7FF), // 🟦 FIELD
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide.none,
+            ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide.none,
+            ),
+          ),
+          validator: (value) =>
+              value == null || value.isEmpty ? "Harap isi $label" : null,
+        ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:testtt/config.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -24,7 +25,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     final newPassword = _passwordController.text.trim();
 
     try {
-      var url = Uri.parse("http://127.0.0.1/SIGMA/api/forgot_password.php");
+      var url = Uri.parse("${Config.baseUrl}forgot_password.php");
       var response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},

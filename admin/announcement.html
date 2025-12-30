@@ -4,10 +4,28 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SIGMA - Announcement</title>
+    <script src="js/auth.js"></script>
+
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/announcement.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js" defer></script>
+
+    <style>
+      .file-box {
+        border: 2px dashed #aaa;
+        padding: 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        text-align: center;
+        font-size: 14px;
+        color: #555;
+      }
+      .file-box:hover {
+        background: #f0f0f0;
+      }
+    </style>
   </head>
+
   <body>
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -21,111 +39,60 @@
         <a href="user_management.html"
           ><li><i class="fa fa-users"></i> User Management</li></a
         >
-        <a href="document.html"
-          ><li><i class="fa fa-file-alt"></i> Document</li></a
+        <a href="document.html" class="active"
+          ><li><i class="fa fa-file-alt"></i> Final Thesis</li></a
         >
-        <a href="#"
-          ><li class="active"><i class="fa fa-bullhorn"></i> Announcement</li></a
+        <a href="announcement.html"
+          ><li><i class="fa fa-bullhorn"></i> Announcement</li></a
         >
-      </ul>
-
-      <p class="section-title">Other</p>
-      <ul>
-        <li><i class="fa fa-database"></i> Logs</li>
       </ul>
     </aside>
 
     <!-- Main Content -->
     <main class="main-content">
       <div class="topbar">
-        <h2>Announcement <span>Welcome, Admin1</span></h2>
-        <div class="topbar-icons">
-          <i class="fa fa-user-circle"></i>
-          <i class="fa fa-cog"></i>
-        </div>
+        <h2>Announcement</h2>
       </div>
 
       <div class="toolbar">
-        <input type="text" class="search-box" placeholder="🔍 Search Announcement .." />
         <button class="add-btn" onclick="openAdd()">+ Add Announcement</button>
       </div>
 
-      <div class="announcement-list">
-        <!-- Card 1 -->
-        <div class="announcement-card">
-          <div class="card-header">
-            <h3>Pendaftaran Sidang TA</h3>
-            <div class="card-actions">
-              <i class="fa fa-pen" onclick="openEdit()"></i>
-              <i class="fa fa-trash" onclick="openDelete('Pendaftaran Sidang TA')"></i>
-            </div>
-          </div>
-          <p class="period">📅 Periode: 1 Juli – 25 Juli 2025</p>
-          <p>Pendaftaran sidang TA I dibuka, silahkan daftar pada link yang tertera di Discord.</p>
-          <a href="#" class="doc-link">📎 PanduanTugasAkhir2025.pdf</a>
-        </div>
-
-        <!-- Card 2 -->
-        <div class="announcement-card">
-          <div class="card-header">
-            <h3>Jadwal Sidang TA</h3>
-            <div class="card-actions">
-              <i class="fa fa-pen" onclick="openEdit()"></i>
-              <i class="fa fa-trash" onclick="openDelete('Jadwal Sidang TA')"></i>
-            </div>
-          </div>
-          <p class="period">📅 Periode: 1 Agustus – 25 Agustus 2025</p>
-          <p>Sesi siang di Ruang Sidang Utama</p>
-          <a href="#" class="doc-link">📎 JadwalSidang.pdf</a>
-        </div>
-
-        <!-- Card 3 -->
-        <div class="announcement-card">
-          <div class="card-header">
-            <h3>Pendaftaran Berkas TA</h3>
-            <div class="card-actions">
-              <i class="fa fa-pen" onclick="openEdit()"></i>
-              <i class="fa fa-trash" onclick="openDelete('Pendaftaran Berkas TA')"></i>
-            </div>
-          </div>
-          <p class="period">📅 Periode: 22 Juli – 6 Agustus 2025</p>
-          <p>Berkas fisik ke TU, softcopy online.</p>
-          <a href="#" class="doc-link">📎 PanduanBerkasTA2025.pdf</a>
-        </div>
-      </div>
+      <div class="announcement-list" id="list"></div>
     </main>
 
-    <!-- === MODALS === -->
-
-    <!-- Add Announcement Modal -->
+    <!-- ADD ANNOUNCEMENT MODAL -->
     <div class="modal" id="addModal">
       <div class="modal-content">
         <h3>Add Announcement</h3>
+
         <form id="addForm">
           <div class="form-row">
             <label>Title</label>
-            <input type="text" id="addTitle" placeholder="Enter title.." />
+            <input type="text" id="addTitle" required />
           </div>
 
           <div class="form-row date-row">
             <div>
               <label>Start Date</label>
-              <input type="date" id="addStart" />
+              <input type="date" id="addStart" required />
             </div>
             <div>
               <label>End Date</label>
-              <input type="date" id="addEnd" />
+              <input type="date" id="addEnd" required />
             </div>
           </div>
 
           <div class="form-row">
             <label>Description</label>
-            <textarea id="addDesc" placeholder="Enter description.."></textarea>
+            <textarea id="addDesc" required></textarea>
           </div>
 
           <div class="form-row">
-            <label>Link/Document</label>
-            <input type="text" id="addLink" placeholder="Enter link/document.." />
+            <label>Upload File (optional)</label>
+            <label class="file-box" for="addFile">📁 Click to upload file</label>
+            <input type="file" id="addFile" style="display: none" />
+            <small id="addFileName"></small>
           </div>
 
           <div class="modal-actions">
@@ -136,50 +103,57 @@
       </div>
     </div>
 
-    <!-- Edit Announcement Modal -->
+    <!-- EDIT ANNOUNCEMENT MODAL -->
     <div class="modal" id="editModal">
       <div class="modal-content">
         <h3>Edit Announcement</h3>
+
         <form id="editForm">
+          <input type="hidden" id="editIndex" />
+
           <div class="form-row">
             <label>Title</label>
-            <input type="text" id="editTitle" value="Pendaftaran Sidang TA" />
+            <input type="text" id="editTitle" required />
           </div>
 
           <div class="form-row date-row">
             <div>
               <label>Start Date</label>
-              <input type="date" id="editStart" value="2025-07-01" />
+              <input type="date" id="editStart" required />
             </div>
             <div>
               <label>End Date</label>
-              <input type="date" id="editEnd" value="2025-07-25" />
+              <input type="date" id="editEnd" required />
             </div>
           </div>
 
           <div class="form-row">
             <label>Description</label>
-            <textarea id="editDesc">Pendaftaran sidang TA I dibuka, silahkan daftar pada link yang tertera di Discord.</textarea>
+            <textarea id="editDesc" required></textarea>
           </div>
 
           <div class="form-row">
-            <label>Link/Document</label>
-            <input type="text" id="editLink" value="PanduanTugasAkhir2025.pdf" />
+            <label>Replace File (optional)</label>
+            <label class="file-box" for="editFile">📁 Click to upload file</label>
+            <input type="file" id="editFile" style="display: none" />
+            <small id="editFileName"></small>
           </div>
 
           <div class="modal-actions">
             <button type="button" class="btn-cancel" onclick="closeEdit()">Cancel</button>
-            <button type="submit" class="btn-done">Done</button>
+            <button type="submit" class="btn-done">Save</button>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
+    <!-- DELETE MODAL -->
     <div class="modal" id="deleteModal">
       <div class="modal-content small">
         <h3>Delete Announcement</h3>
-        <p>Are you sure you want to delete <span id="deleteName"></span>?</p>
+        <p>
+          Are you sure you want to delete <b><span id="deleteName"></span></b>?
+        </p>
         <div class="modal-actions">
           <button class="btn-cancel" onclick="closeDelete()">Cancel</button>
           <button class="btn-delete" onclick="confirmDelete()">Delete</button>
@@ -187,45 +161,174 @@
       </div>
     </div>
 
+    <!-- JAVASCRIPT CRUD -->
     <script>
-      // === OPEN/CLOSE ADD ===
+      const BASE_URL = window.BASE_URL;
+
+      let announcements = [];
+      let deleteIndex = -1;
+
+      // LOAD FROM DATABASE
+      async function loadAnnouncements() {
+        const res = await fetch("php/get_announcements.php");
+        const data = await res.json();
+        announcements = data.announcements || [];
+        render();
+      }
+
+      loadAnnouncements();
+
+      // RENDER LIST
+      function render() {
+        const list = document.getElementById("list");
+        list.innerHTML = "";
+
+        announcements.forEach((a, idx) => {
+          list.innerHTML += `
+          <div class="announcement-card">
+            <div class="card-header">
+              <h3>${a.title}</h3>
+              <div class="card-actions">
+                <i class="fa fa-pen" onclick="openEdit(${idx})"></i>
+                <i class="fa fa-trash" onclick="openDelete(${idx})"></i>
+              </div>
+            </div>
+
+            <p class="period">📅 ${a.start_date} — ${a.end_date}</p>
+            <p>${a.description}</p>
+
+              ${a.link ? `<a href="uploads/${a.link}" target="_blank" class="doc-link">📎 ${a.link}</a>` : ""}
+          </div>
+        `;
+        });
+      }
+
+      // ADD
+      document.getElementById("addFile").onchange = () => {
+        const f = addFile.files[0];
+        addFileName.innerText = f ? f.name : "";
+      };
+
+      document.getElementById("addForm").onsubmit = async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData();
+        formData.append("title", addTitle.value);
+        formData.append("start_date", addStart.value);
+        formData.append("end_date", addEnd.value);
+        formData.append("description", addDesc.value);
+
+        if (addFile.files[0]) {
+          formData.append("file", addFile.files[0]);
+        }
+
+        const res = await fetch("php/add_announcement.php", {
+          method: "POST",
+          body: formData,
+        });
+
+        const out = await res.json();
+
+        if (out.success) {
+          closeAdd();
+          loadAnnouncements();
+        } else {
+          alert("Failed: " + out.message);
+        }
+      };
+
+      // EDIT
+      function openEdit(index) {
+        const a = announcements[index];
+
+        editIndex.value = index;
+        editTitle.value = a.title;
+        editStart.value = a.start_date;
+        editEnd.value = a.end_date;
+        editDesc.value = a.description;
+
+        editFileName.innerText = "";
+        document.getElementById("editModal").style.display = "flex";
+      }
+
+      document.getElementById("editFile").onchange = () => {
+        const f = editFile.files[0];
+        editFileName.innerText = f ? f.name : "";
+      };
+
+      document.getElementById("editForm").onsubmit = async (e) => {
+        e.preventDefault();
+
+        const idx = editIndex.value;
+        const a = announcements[idx];
+
+        const formData = new FormData();
+        formData.append("id", a.id);
+        formData.append("title", editTitle.value);
+        formData.append("start_date", editStart.value);
+        formData.append("end_date", editEnd.value);
+        formData.append("description", editDesc.value);
+        formData.append("old_link", a.link);
+
+        if (editFile.files[0]) {
+          formData.append("file", editFile.files[0]);
+        }
+
+        const res = await fetch("php/edit_announcement.php", {
+          method: "POST",
+          body: formData,
+        });
+
+        const out = await res.json();
+
+        if (out.success) {
+          closeEdit();
+          loadAnnouncements();
+        } else {
+          alert("Failed to update.");
+        }
+      };
+
+      // DELETE
+      function openDelete(idx) {
+        deleteIndex = idx;
+        deleteName.innerText = announcements[idx].title;
+        document.getElementById("deleteModal").style.display = "flex";
+      }
+
+      async function confirmDelete() {
+        const id = announcements[deleteIndex].id;
+
+        const formData = new FormData();
+        formData.append("id", id);
+
+        const res = await fetch("php/delete_announcement.php", {
+          method: "POST",
+          body: formData,
+        });
+
+        const out = await res.json();
+        if (out.success) {
+          closeDelete();
+          loadAnnouncements();
+        }
+      }
+
+      // MODAL FUNCTIONS
       function openAdd() {
+        addForm.reset();
+        addFileName.innerText = "";
         document.getElementById("addModal").style.display = "flex";
       }
       function closeAdd() {
         document.getElementById("addModal").style.display = "none";
       }
-
-      // === OPEN/CLOSE EDIT ===
-      function openEdit() {
-        document.getElementById("editModal").style.display = "flex";
-      }
       function closeEdit() {
         document.getElementById("editModal").style.display = "none";
-      }
-
-      // === OPEN/CLOSE DELETE ===
-      let deleteTarget = "";
-      function openDelete(name) {
-        deleteTarget = name;
-        document.getElementById("deleteName").textContent = name;
-        document.getElementById("deleteModal").style.display = "flex";
       }
       function closeDelete() {
         document.getElementById("deleteModal").style.display = "none";
       }
-      function confirmDelete() {
-        alert("Deleted announcement: " + deleteTarget);
-        closeDelete();
-      }
-
-      // === CLOSE WHEN CLICK OUTSIDE ===
-      window.onclick = function (e) {
-        const modals = document.querySelectorAll(".modal");
-        modals.forEach((m) => {
-          if (e.target === m) m.style.display = "none";
-        });
-      };
     </script>
   </body>
 </html>

@@ -1,7 +1,9 @@
 <?php
-include "config.php";
+
 header("Content-Type: application/json");
 
+require_once "guard.php";
+require_once "config.php";
 $query = "
 SELECT 
     u.id,

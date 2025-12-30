@@ -1,8 +1,16 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import 'package:testtt/mahasiswa/jadwal/counselling_schedule_screen.dart';
 import 'package:testtt/mahasiswa/dokumen/document_screen.dart';
 import 'package:testtt/mahasiswa/kanban/kanban_screen.dart';
 import 'package:testtt/mahasiswa/akun/profile_screen.dart';
+import 'package:testtt/mahasiswa/notification/notification_page.dart';
+
+import '../../config.dart';
 
 class DashboardMahasiswaScreen extends StatefulWidget {
   const DashboardMahasiswaScreen({super.key});
@@ -15,13 +23,25 @@ class DashboardMahasiswaScreen extends StatefulWidget {
 class _DashboardMahasiswaScreenState extends State<DashboardMahasiswaScreen> {
   int currentIndex = 0;
 
-  final List<Widget> _pages = const [
-    _DashboardHome(),
-    CounsellingScheduleScreen(),
-    DocumentPage(),
-    KanbanScreen(),
-    ProfileScreen(),
-  ];
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      _DashboardHome(
+        onGoToJadwal: () {
+          setState(() {
+            currentIndex = 1;
+          });
+        },
+      ),
+      const CounsellingScheduleScreen(),
+      const DocumentPage(),
+      const KanbanScreen(),
+      const ProfileScreen(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,11 +50,12 @@ class _DashboardMahasiswaScreenState extends State<DashboardMahasiswaScreen> {
       body: SafeArea(
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 350),
-          transitionBuilder: (Widget child, Animation<double> animation) {
+          transitionBuilder: (child, animation) {
             final offsetAnimation = Tween<Offset>(
-              begin: const Offset(0.1, 0), // geser dikit dari kanan
+              begin: const Offset(0.1, 0),
               end: Offset.zero,
             ).animate(animation);
+
             return FadeTransition(
               opacity: animation,
               child: SlideTransition(position: offsetAnimation, child: child),
@@ -44,9 +65,8 @@ class _DashboardMahasiswaScreenState extends State<DashboardMahasiswaScreen> {
         ),
       ),
 
-      // 🔹 Bottom Navigation Bar
       bottomNavigationBar: Container(
-        color: Colors.white,
+        color: const Color(0xFF2E3A87),
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -58,7 +78,7 @@ class _DashboardMahasiswaScreenState extends State<DashboardMahasiswaScreen> {
               onTap: () => setState(() => currentIndex = 0),
             ),
             _NavIcon(
-              icon: Icons.schedule_rounded,
+              icon: Icons.calendar_month_rounded,
               label: "Jadwal",
               isActive: currentIndex == 1,
               onTap: () => setState(() => currentIndex = 1),
@@ -88,19 +108,184 @@ class _DashboardMahasiswaScreenState extends State<DashboardMahasiswaScreen> {
   }
 }
 
-// 🏠 Dashboard Home
-class _DashboardHome extends StatelessWidget {
-  const _DashboardHome();
+//
+// ============================ DASHBOARD HOME ============================
+//
+
+class _DashboardHome extends StatefulWidget {
+  final VoidCallback onGoToJadwal;
+
+  const _DashboardHome({super.key, required this.onGoToJadwal});
+
+  @override
+  State<_DashboardHome> createState() => _DashboardHomeState();
+}
+
+class _DashboardHomeState extends State<_DashboardHome> {
+  double progressTA = 0.0;
+  bool loading = true;
+
+  List<dynamic> announcements = [];
+  bool loadingAnnouncements = true;
+
+  String _cleanFileName(String file) {
+    String name = file.split('/').last;
+    name = name.replaceFirst(RegExp(r'^[0-9\-_\.]+'), '');
+    return name;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+    _loadProgressTA();
+    _loadAnnouncements();
+    _loadUpcoming();
+  }
+
+  // ================= PROFILE =================
+  String name = "";
+  String nim = "";
+  String prodi = "";
+
+  // ================= UPCOMING =================
+  List upcoming = [];
+  bool loadingUpcoming = true;
+
+  Future<void> _loadProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final studentId = prefs.getInt('student_number') ?? 0;
+
+    final res = await http.post(
+      Uri.parse("${Config.baseUrl}get_student_profile.php"),
+      body: {"student_id": studentId.toString()},
+    );
+
+    final data = jsonDecode(res.body);
+
+    if (data["success"] == true) {
+      setState(() {
+        name = data["data"]["name"];
+        nim = data["data"]["student_number"].toString();
+        prodi = data["data"]["study_program"] ?? "-";
+      });
+    }
+  }
+
+  Future<void> _loadProgressTA() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final studentId = prefs.getInt('student_number') ?? 0;
+
+      final response = await http.post(
+        Uri.parse("${Config.baseUrl}get_activities.php"),
+        body: {"student_id": studentId.toString()},
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (data["success"] == true) {
+        List tasks = data["data"];
+
+        double total = 0;
+        for (var t in tasks) {
+          total += double.tryParse(t["percentage"].toString()) ?? 0;
+        }
+
+        setState(() {
+          progressTA = tasks.isEmpty ? 0 : (total / tasks.length) / 100;
+          loading = false;
+        });
+      } else {
+        setState(() => loading = false);
+      }
+    } catch (_) {
+      setState(() => loading = false);
+    }
+  }
+
+  Future<void> _loadAnnouncements() async {
+    try {
+      final res = await http.get(
+        Uri.parse("${Config.baseUrl}get_announcements.php"),
+      );
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+
+        if (data["success"] == true) {
+          setState(() {
+            announcements = data["data"] ?? [];
+            loadingAnnouncements = false;
+          });
+          return;
+        }
+      }
+
+      setState(() {
+        announcements = [];
+        loadingAnnouncements = false;
+      });
+    } catch (_) {
+      setState(() {
+        announcements = [];
+        loadingAnnouncements = false;
+      });
+    }
+  }
+
+  Future<void> _loadUpcoming() async {
+    final prefs = await SharedPreferences.getInstance();
+    final studentId = prefs.getInt('student_number') ?? 0;
+
+    final res = await http.post(
+      Uri.parse("${Config.baseUrl}get_upcoming_schedule.php"),
+      body: {"student_id": studentId.toString()},
+    );
+
+    final data = jsonDecode(res.body);
+
+    setState(() {
+      upcoming = data["success"] == true ? data["data"] : [];
+      loadingUpcoming = false;
+    });
+  }
+
+  // File loader path: admin/uploads/<file>
+  String _fileUrl(String? fileName) {
+    if (fileName?.isEmpty ?? true) return "";
+
+    String base = Config.baseUrl;
+    base = base.replaceAll("/api/", "/admin/uploads/");
+
+    return base + fileName!;
+  }
+
+  Future<void> _openFile(String url) async {
+    if (url.isEmpty) return;
+
+    final uri = Uri.parse(url);
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Tidak dapat membuka file")));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6F8),
+
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+
         title: const Text(
           'Dashboard',
           style: TextStyle(
@@ -110,81 +295,35 @@ class _DashboardHome extends StatelessWidget {
             fontFamily: 'Poppins',
           ),
         ),
+
         actions: [
           IconButton(
             icon: const Icon(
               Icons.notifications_none_rounded,
               color: Color(0xFF2E3A87),
             ),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationPage()),
+              );
+            },
           ),
         ],
       ),
+
+      //
+      // ============================ BODY ============================
+      //
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 👤 Profil Mahasiswa
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 28,
-                    backgroundColor: Color(0xFF2E3A87),
-                    child: Icon(Icons.person, color: Colors.white, size: 36),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          "Muhammad Aditya Rifa'i",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                            fontSize: 16,
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          "4212384778",
-                          style: TextStyle(
-                            color: Colors.black54,
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                        SizedBox(height: 2),
-                        Text(
-                          "D3 Teknik Instrumentasi",
-                          style: TextStyle(
-                            color: Colors.black54,
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _profileCard(),
+
             const SizedBox(height: 20),
 
-            // 📊 Progress TA
             const Text(
               "Progress TA",
               style: TextStyle(
@@ -193,48 +332,71 @@ class _DashboardHome extends StatelessWidget {
                 fontFamily: 'Poppins',
               ),
             ),
+
             const SizedBox(height: 6),
+
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(
-                value: 0.5,
-                minHeight: 10,
-                backgroundColor: Colors.grey[300],
+                value: loading ? 0 : progressTA,
+                minHeight: 12,
+                backgroundColor: const Color(0x80FF8A4C),
                 color: const Color(0xFFFF8A4C),
               ),
             ),
-            const SizedBox(height: 20),
 
-            // 📢 Pengumuman
-            const Text(
-              "Pengumuman",
-              style: TextStyle(
+            const SizedBox(height: 6),
+
+            Text(
+              loading
+                  ? "Loading..."
+                  : "${(progressTA * 100).toStringAsFixed(0)}%",
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF2E3A87),
                 fontFamily: 'Poppins',
               ),
             ),
-            const SizedBox(height: 10),
 
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _announcementCard(
-                    "Pendaftaran sidang TA I dibuka, silahkan daftar pada link yang tertera di discord",
-                    "PanduanTugasAkhir2025.pdf",
-                  ),
-                  const SizedBox(width: 10),
-                  _announcementCard(
-                    "Jadwal bimbingan minggu depan sudah tersedia di sistem.",
-                    "Lihat Jadwal Bimbingan.pdf",
-                  ),
-                ],
+            const SizedBox(height: 20),
+
+            //
+            // ======================= Pengumuman =======================
+            //
+            const Text(
+              "Pengumuman",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2E3A87),
               ),
             ),
+
+            const SizedBox(height: 10),
+
+            loadingAnnouncements
+                ? const Center(child: CircularProgressIndicator())
+                : announcements.isEmpty
+                ? const Text("Belum ada pengumuman")
+                : SingleChildScrollView(
+                    child: Column(
+                      children: announcements.map((a) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _announcementCard(
+                            title: a["title"] ?? "",
+                            description: a["description"] ?? "",
+                            startDate: a["start_date"] ?? "",
+                            endDate: a["end_date"] ?? "",
+                            link: a["link"] ?? "",
+                            onOpen: () => _openFile(_fileUrl(a["link"])),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
             const SizedBox(height: 25),
 
-            // 🗓 Upcoming
             const Text(
               "Upcoming",
               style: TextStyle(
@@ -243,68 +405,184 @@ class _DashboardHome extends StatelessWidget {
                 fontFamily: 'Poppins',
               ),
             ),
+
             const SizedBox(height: 10),
 
-            _upcomingCard(),
-            const SizedBox(height: 10),
-            _upcomingCard(),
+            loadingUpcoming
+                ? const Center(child: CircularProgressIndicator())
+                : upcoming.isEmpty
+                ? const Text("Tidak ada jadwal terdekat")
+                : Column(
+                    children: upcoming.map((u) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _upcomingCardDynamic(u, widget.onGoToJadwal),
+                      );
+                    }).toList(),
+                  ),
           ],
         ),
       ),
     );
   }
 
-  // 📄 Kartu Pengumuman
-  static Widget _announcementCard(String title, String fileName) {
+  //
+  // ======================= Widgets =======================
+  //
+
+  Widget _profileCard() {
     return Container(
-      width: 270,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.15),
-            blurRadius: 6,
+            color: Colors.grey.withValues(alpha: 0.1),
+            blurRadius: 8,
             offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              color: Colors.black87,
-              fontSize: 13,
-            ),
+          const CircleAvatar(
+            radius: 28,
+            backgroundColor: Color(0xFF2E3A87),
+            child: Icon(Icons.person, color: Colors.white, size: 36),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.link, size: 16, color: Color(0xFF2E3A87)),
-              const SizedBox(width: 6),
-              Text(
-                fileName,
-                style: const TextStyle(
-                  color: Color(0xFF2E3A87),
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                  fontFamily: 'Poppins',
+          const SizedBox(width: 12),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name.isEmpty ? "Loading..." : name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    fontFamily: 'Poppins',
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(nim, style: const TextStyle(fontFamily: 'Poppins')),
+                const SizedBox(height: 2),
+                Text(prodi, style: const TextStyle(fontFamily: 'Poppins')),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  // 🗓 Kartu Upcoming
-  static Widget _upcomingCard() {
+  // ----------------------------------------------------------
+  //                    ANNOUNCEMENT CARD
+  // ----------------------------------------------------------
+
+  Widget _announcementCard({
+    required String title,
+    required String description,
+    required String startDate,
+    required String endDate,
+    required String link,
+    VoidCallback? onOpen,
+  }) {
     return Container(
+      width: double.infinity, // FULL WIDTH
+      padding: const EdgeInsets.all(14),
+
+      decoration: BoxDecoration(
+        color: const Color(0xFF2E3A87), // BIRU
+        borderRadius: BorderRadius.circular(12),
+      ),
+
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // TANGGAL
+          Text(
+            "$startDate → $endDate",
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.white70,
+              fontFamily: 'Poppins',
+            ),
+          ),
+
+          const SizedBox(height: 6),
+
+          // JUDUL
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontFamily: 'Poppins',
+            ),
+          ),
+
+          const SizedBox(height: 6),
+
+          // DESKRIPSI
+          Text(
+            description,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 13,
+              height: 1.4,
+              color: Colors.white,
+              fontFamily: 'Poppins',
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          // LINK (KALO ADA)
+          if (link.isNotEmpty)
+            MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: onOpen,
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.attach_file,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        _cleanFileName(link),
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          fontFamily: 'Poppins',
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // ----------------------------------------------------------
+  //                    UPCOMING CARD
+  // ----------------------------------------------------------
+  Widget _upcomingCardDynamic(Map u, VoidCallback onGoToJadwal) {
+    return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFF2E3A87),
@@ -313,29 +591,33 @@ class _DashboardHome extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Bimbingan Bab I - Offline",
-            style: TextStyle(
+          Text(
+            "${u['title']} - ${u['session']}",
+            style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
               fontFamily: 'Poppins',
             ),
           ),
-          const SizedBox(height: 4),
-          const Text(
-            "10 Desember 2025, 16.00\nTA 12.4",
-            style: TextStyle(
+
+          const SizedBox(height: 6),
+
+          Text(
+            "${u['datetime']}\n${u['location'] ?? '-'}",
+            style: const TextStyle(
               color: Colors.white,
               fontFamily: 'Poppins',
               fontSize: 13,
               height: 1.3,
             ),
           ),
+
           const SizedBox(height: 10),
+
           Align(
             alignment: Alignment.centerRight,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: onGoToJadwal,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6ECFF6),
                 shape: RoundedRectangleBorder(
@@ -362,7 +644,10 @@ class _DashboardHome extends StatelessWidget {
   }
 }
 
-// 🔹 Widget ikon navigasi bawah
+//
+// ========================= BOTTOM NAV ICON =========================
+//
+
 class _NavIcon extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -380,24 +665,32 @@ class _NavIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
-              color: isActive ? const Color(0xFF2E3A87) : Colors.black54,
+              color: isActive
+                  ? const Color.fromARGB(255, 255, 255, 255)
+                  : const Color.fromARGB(255, 255, 255, 255),
               size: isActive ? 28 : 25,
             ),
+
             const SizedBox(height: 3),
+
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
-                color: isActive ? const Color(0xFF2E3A87) : Colors.black54,
+                color: isActive
+                    ? const Color.fromARGB(255, 245, 245, 245)
+                    : const Color.fromARGB(255, 245, 245, 245),
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
               ),
             ),

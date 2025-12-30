@@ -13,26 +13,23 @@ function login() {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ username, password }),
+    credentials: "include",
+    body: JSON.stringify({
+      username: username,
+      password: password,
+    }),
   })
-    .then((response) => {
-      // cek apakah response valid JSON
-      if (!response.ok) {
-        throw new Error("HTTP error! Status: " + response.status);
-      }
-      return response.json();
-    })
+    .then((res) => res.json())
     .then((data) => {
       if (data.status === "success") {
-        // Redirect ke dashboard
+        // 🔥 LIHAT INI
         window.location.href = "dashboard.html";
       } else {
         alert(data.message);
       }
     })
-    .catch((error) => {
-      console.error("Error:", error);
-      alert("Terjadi kesalahan pada server!");
+    .catch(() => {
+      alert("Terjadi kesalahan server");
     });
 }
 

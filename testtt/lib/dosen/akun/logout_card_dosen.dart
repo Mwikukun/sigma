@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LogoutCard extends StatelessWidget {
   const LogoutCard({super.key});
@@ -34,15 +35,17 @@ class LogoutCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Anda telah logout.'),
-                  backgroundColor: Color(0xff2E3A87),
-                ),
+
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.clear();
+
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/login',
+                (route) => false,
               );
-              // TODO: Arahkan ke halaman login di sini
             },
             child: const Text('Logout', style: TextStyle(color: Colors.white)),
           ),
@@ -53,24 +56,25 @@ class LogoutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: const Color(0xffDCE3FF),
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ListTile(
-        leading: const Icon(Icons.logout, color: Color(0xff2E3A87)),
-        title: const Text(
-          'Logout',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Color(0xff2E3A87),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      child: InkWell(
+        onTap: () => _showLogoutDialog(context),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2E3A87), // biru solid
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: const [
+              Icon(Icons.logout, color: Colors.white),
+              SizedBox(width: 12),
+              Text('Logout', style: TextStyle(color: Colors.white)),
+            ],
           ),
         ),
-        subtitle: const Text(
-          'Keluar dari akun Anda',
-          style: TextStyle(color: Colors.black54),
-        ),
-        onTap: () => _showLogoutDialog(context),
       ),
     );
   }

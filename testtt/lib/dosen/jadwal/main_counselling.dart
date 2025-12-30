@@ -1,5 +1,6 @@
 // ... (import tetap sama)
 import 'package:flutter/material.dart';
+import 'package:testtt/config.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -65,7 +66,7 @@ class _MainCounsellingPageState extends State<MainCounsellingPage>
 
       debugPrint("📌 Fetch schedules for lecturer_id = $lecturerId");
 
-      final uri = Uri.parse("http://127.0.0.1/SIGMA/api/schedules/list.php");
+      final uri = Uri.parse("${Config.baseUrl}schedules/list.php");
       final response = await http.post(
         uri,
         body: {"lecturer_id": lecturerId.toString()},
@@ -125,11 +126,10 @@ class _MainCounsellingPageState extends State<MainCounsellingPage>
   }
 
   Future<void> _openAddSheet() async {
-    final Schedule? result = await showModalBottomSheet<Schedule>(
+    final Schedule? result = await showDialog<Schedule>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const AddCounsellingSheet(),
+      barrierDismissible: false,
+      builder: (_) => const AddCounsellingDialog(),
     );
 
     if (result != null) {
@@ -143,21 +143,28 @@ class _MainCounsellingPageState extends State<MainCounsellingPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: const Color(0xfff5f6fa),
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
-        elevation: 1,
+        elevation: 0,
         centerTitle: true,
-        title: Text(
+        title: const Text(
           "Counselling",
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: primaryColor,
+            color: Color(0xff2E3A87),
             fontSize: 22,
           ),
         ),
       ),
+
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: primaryColor,
+        onPressed: _openAddSheet,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -174,24 +181,6 @@ class _MainCounsellingPageState extends State<MainCounsellingPage>
                   ),
                 ),
                 const Spacer(),
-                MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
-                    onTap: _openAddSheet,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: primaryColor,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.add,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -364,23 +353,35 @@ class _MainCounsellingPageState extends State<MainCounsellingPage>
 }
 
 // ==================== BOTTOM SHEET TAMBAH JADWAL ====================
-class AddCounsellingSheet extends StatefulWidget {
-  const AddCounsellingSheet({super.key});
+
+class AddCounsellingDialog extends StatefulWidget {
+  const AddCounsellingDialog({super.key});
 
   @override
-  State<AddCounsellingSheet> createState() => _AddCounsellingSheetState();
+  State<AddCounsellingDialog> createState() => _AddCounsellingDialogState();
 }
 
-class _AddCounsellingSheetState extends State<AddCounsellingSheet> {
+class _AddCounsellingDialogState extends State<AddCounsellingDialog> {
   final TextEditingController titleC = TextEditingController();
   final TextEditingController descriptionC = TextEditingController();
   final TextEditingController locationC = TextEditingController();
+
   String? sesi;
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
 
+  InputDecoration _inputDecoration(String hint) => InputDecoration(
+    hintText: hint,
+    filled: true,
+    fillColor: const Color(0xFFAAE7FF),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide.none,
+    ),
+  );
+
   String _formatDate(DateTime d) {
-    const monthNames = [
+    const months = [
       "January",
       "February",
       "March",
@@ -394,18 +395,8 @@ class _AddCounsellingSheetState extends State<AddCounsellingSheet> {
       "November",
       "December",
     ];
-    return "${d.day} ${monthNames[d.month - 1]} ${d.year}";
+    return "${d.day} ${months[d.month - 1]} ${d.year}";
   }
-
-  InputDecoration _inputDecoration(String hint) => InputDecoration(
-    hintText: hint,
-    filled: true,
-    fillColor: Colors.white.withValues(alpha: 0.8),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8),
-      borderSide: BorderSide.none,
-    ),
-  );
 
   Future<void> _submitSchedule() async {
     if (titleC.text.trim().isEmpty ||
@@ -427,11 +418,12 @@ class _AddCounsellingSheetState extends State<AddCounsellingSheet> {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      int? lecturerId = prefs.getInt('lecturer_id') ?? prefs.getInt('user_id');
+      final lecturerId = prefs.getInt('lecturer_id') ?? prefs.getInt('user_id');
+
       if (lecturerId == null) {
-        Navigator.of(context).pop();
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Gagal: ID dosen tidak ditemukan")),
+          const SnackBar(content: Text("ID dosen tidak ditemukan")),
         );
         return;
       }
@@ -444,43 +436,42 @@ class _AddCounsellingSheetState extends State<AddCounsellingSheet> {
         selectedTime!.minute,
       ).toIso8601String();
 
-      final uri = Uri.parse("http://127.0.0.1/SIGMA/api/schedules/add.php");
-      final body = {
-        "lecturer_id": lecturerId,
-        "title": titleC.text.trim(),
-        "session": sesi!.toLowerCase(),
-        "datetime": datetime,
-        "description": descriptionC.text.trim(),
-        "location": locationC.text.trim(),
-      };
-
       final response = await http.post(
-        uri,
+        Uri.parse("${Config.baseUrl}schedules/add.php"),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode(body),
+        body: jsonEncode({
+          "lecturer_id": lecturerId,
+          "title": titleC.text.trim(),
+          "session": sesi!.toLowerCase(),
+          "datetime": datetime,
+          "description": descriptionC.text.trim(),
+          "location": locationC.text.trim(),
+        }),
       );
 
-      Navigator.of(context).pop();
+      Navigator.pop(context);
 
       final res = jsonDecode(response.body);
       if (response.statusCode == 200 && res['status'] == true) {
-        final newSchedule = Schedule(
-          id: 0, // 🔥 dummy sementara
-          title: titleC.text.trim(),
-          sesi: sesi!,
-          date: selectedDate!,
-          time: selectedTime!,
-          location: locationC.text.trim(),
-          description: descriptionC.text.trim(),
+        Navigator.pop(
+          context,
+          Schedule(
+            id: 0,
+            title: titleC.text.trim(),
+            sesi: sesi!,
+            date: selectedDate!,
+            time: selectedTime!,
+            location: locationC.text.trim(),
+            description: descriptionC.text.trim(),
+          ),
         );
-        Navigator.of(context).pop(newSchedule);
       } else {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text("Gagal: ${res['message']}")));
+        ).showSnackBar(SnackBar(content: Text(res['message'] ?? "Gagal")));
       }
     } catch (e) {
-      Navigator.of(context).pop();
+      Navigator.pop(context);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Error: $e")));
@@ -489,66 +480,60 @@ class _AddCounsellingSheetState extends State<AddCounsellingSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        maxChildSize: 0.95,
-        minChildSize: 0.4,
-        builder: (_, controller) => Container(
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: SingleChildScrollView(
+        child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.lightBlue.shade100.withValues(alpha: 0.95),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            color: const Color(0xFF6ECFF6),
+            borderRadius: BorderRadius.circular(16),
           ),
-          child: ListView(
-            controller: controller,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Center(
-                child: Container(
-                  width: 60,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.black26,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
+              const Center(
+                child: Text(
+                  "Tambah Jadwal Bimbingan",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
-              const Text(
-                "Tambah Jadwal Bimbingan",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
               const SizedBox(height: 16),
+
               const Text("Judul Bimbingan"),
               const SizedBox(height: 6),
               TextField(
                 controller: titleC,
                 decoration: _inputDecoration("Masukan Judul Bimbingan"),
               ),
+
               const SizedBox(height: 12),
               const Text("Sesi"),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
                 value: sesi,
+                decoration: _inputDecoration("Pilih Sesi"),
                 items: ["Online", "Offline"]
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
                 onChanged: (v) => setState(() => sesi = v),
-                decoration: _inputDecoration("Pilih Sesi"),
               ),
+
               const SizedBox(height: 12),
               const Text("Tanggal"),
               const SizedBox(height: 6),
               TextField(
                 readOnly: true,
                 onTap: () async {
-                  final date = await showDatePicker(
+                  final d = await showDatePicker(
                     context: context,
                     initialDate: DateTime.now(),
                     firstDate: DateTime(2020),
                     lastDate: DateTime(2035),
                   );
-                  if (date != null) setState(() => selectedDate = date);
+                  if (d != null) setState(() => selectedDate = d);
                 },
                 decoration: _inputDecoration(
                   selectedDate == null
@@ -556,17 +541,18 @@ class _AddCounsellingSheetState extends State<AddCounsellingSheet> {
                       : _formatDate(selectedDate!),
                 ),
               ),
+
               const SizedBox(height: 12),
               const Text("Waktu"),
               const SizedBox(height: 6),
               TextField(
                 readOnly: true,
                 onTap: () async {
-                  final time = await showTimePicker(
+                  final t = await showTimePicker(
                     context: context,
                     initialTime: TimeOfDay.now(),
                   );
-                  if (time != null) setState(() => selectedTime = time);
+                  if (t != null) setState(() => selectedTime = t);
                 },
                 decoration: _inputDecoration(
                   selectedTime == null
@@ -574,26 +560,26 @@ class _AddCounsellingSheetState extends State<AddCounsellingSheet> {
                       : selectedTime!.format(context),
                 ),
               ),
+
               const SizedBox(height: 12),
               const Text("Deskripsi"),
               const SizedBox(height: 6),
               TextField(
                 controller: descriptionC,
-                maxLines: 3,
-                decoration: _inputDecoration("Masukan Deskripsi Bimbingan"),
+                maxLines: 2,
+                decoration: _inputDecoration("Masukan Deskripsi"),
               ),
+
               const SizedBox(height: 12),
               Text(sesi == "Online" ? "Link Zoom" : "Lokasi"),
               const SizedBox(height: 6),
               TextField(
                 controller: locationC,
-                keyboardType: sesi == "Online"
-                    ? TextInputType.url
-                    : TextInputType.text,
                 decoration: _inputDecoration(
                   sesi == "Online" ? "Masukan Link Zoom" : "Masukan Lokasi",
                 ),
               ),
+
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
@@ -608,7 +594,7 @@ class _AddCounsellingSheetState extends State<AddCounsellingSheet> {
                   onPressed: _submitSchedule,
                   child: const Text(
                     "Tambah",
-                    style: TextStyle(fontSize: 16, color: Colors.white),
+                    style: TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 ),
               ),

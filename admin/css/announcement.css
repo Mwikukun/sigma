@@ -1,26 +1,26 @@
 /* === Announcement Page === */
 
-.toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 15px 0 25px;
+.main-content .toolbar {
+    display: flex !important;
+    justify-content: flex-end !important;
+    width: 100%;
+    margin-bottom: 20px;
 }
 
 .add-btn {
-    background-color: #263b80;
-    color: #fff;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 8px;
+    background: #263b80;
+    padding: 10px 18px;
+    color: white;
+    border-radius: 6px;
     cursor: pointer;
-    font-weight: 600;
-    transition: 0.2s;
+    border: none;
+    font-size: 14px;
 }
 
 .add-btn:hover {
-    background-color: #1e2f6d;
+    background: #263b80;
 }
+
 
 .announcement-list {
     display: flex;

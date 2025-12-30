@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:testtt/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -17,7 +18,6 @@ class CounsellingScheduleScreen extends StatefulWidget {
 class _CounsellingScheduleScreenState extends State<CounsellingScheduleScreen> {
   int _selectedTab = 0;
   String? studentId;
-  final String baseUrl = "http://127.0.0.1/SIGMA/api";
 
   final Color primaryColor = const Color(0xFF283593);
   final Color accentColor = const Color(0xFF6ED8F8);
@@ -43,7 +43,9 @@ class _CounsellingScheduleScreenState extends State<CounsellingScheduleScreen> {
   Future<List<dynamic>> fetchApprovedSchedules() async {
     if (studentId == null) return [];
     final response = await http.get(
-      Uri.parse('$baseUrl/get_student_schedules.php?student_id=$studentId'),
+      Uri.parse(
+        '${Config.baseUrl}get_student_schedules.php?student_id=$studentId',
+      ),
     );
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
@@ -54,10 +56,34 @@ class _CounsellingScheduleScreenState extends State<CounsellingScheduleScreen> {
     return [];
   }
 
+  Color statusColor(String status) {
+    switch (status) {
+      case 'approved':
+        return Colors.green;
+      case 'rejected':
+        return Colors.red;
+      case 'pending':
+      default:
+        return Colors.orange;
+    }
+  }
+
+  String statusText(String status) {
+    switch (status) {
+      case 'approved':
+        return 'Approved';
+      case 'rejected':
+        return 'Rejected';
+      case 'pending':
+      default:
+        return 'Pending';
+    }
+  }
+
   Future<List<dynamic>> fetchAttendances() async {
     if (studentId == null) return [];
     final response = await http.get(
-      Uri.parse('$baseUrl/get_attendances.php?student_id=$studentId'),
+      Uri.parse('${Config.baseUrl}get_attendances.php?student_id=$studentId'),
     );
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
@@ -72,7 +98,7 @@ class _CounsellingScheduleScreenState extends State<CounsellingScheduleScreen> {
     if (studentId == null) return [];
     final response = await http.get(
       Uri.parse(
-        '$baseUrl/get_student_pending_schedules.php?student_id=$studentId',
+        '${Config.baseUrl}get_student_pending_schedules.php?student_id=$studentId',
       ),
     );
     if (response.statusCode == 200) {
@@ -279,7 +305,7 @@ class _CounsellingScheduleScreenState extends State<CounsellingScheduleScreen> {
                     ),
                     child: const Text(
                       "Konfirmasi Hadir",
-                      style: TextStyle(color: Colors.white, fontSize: 13),
+                      style: TextStyle(color: Colors.black, fontSize: 13),
                     ),
                   )
                 : Container(
@@ -380,6 +406,8 @@ class _CounsellingScheduleScreenState extends State<CounsellingScheduleScreen> {
 
         return Column(
           children: data.map<Widget>((item) {
+            final status = (item['status'] ?? 'pending').toString();
+
             return buildScheduleCard(
               title: item['title'] ?? '-',
               session: item['session'] ?? '-',
@@ -387,8 +415,8 @@ class _CounsellingScheduleScreenState extends State<CounsellingScheduleScreen> {
               description: item['description'] ?? '-',
               location: item['location'] ?? '-',
               isOnline: (item['session'] ?? '').toLowerCase() == 'online',
-              statusLabel: "Menunggu Konfirmasi",
-              statusColor: Colors.black.withOpacity(0.25),
+              statusLabel: statusText(status),
+              statusColor: statusColor(status),
               showConfirmButton: false,
             );
           }).toList(),

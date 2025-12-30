@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 include '../config_api.php';
 
-// Ambil lecturer_id (sekarang employee_number langsung)
+// Ambil lecturer_id
 $input = json_decode(file_get_contents("php://input"), true);
 $lecturer_id = $_POST['lecturer_id'] 
     ?? ($_GET['lecturer_id'] ?? ($input['lecturer_id'] ?? null));
@@ -21,7 +21,7 @@ if (!$lecturer_id) {
     exit;
 }
 
-// LANGSUNG cari jadwal berdasarkan employee_number
+// AMBIL JADWAL YANG SUDAH DISETUJUI
 $stmt = $conn->prepare("
     SELECT 
         id, 
@@ -32,9 +32,11 @@ $stmt = $conn->prepare("
         location, 
         status 
     FROM schedules 
-    WHERE lecture_id = ?
-    ORDER BY datetime DESC
+    WHERE lecture_id = ? 
+      AND status = 'approved'
+    ORDER BY datetime ASC
 ");
+
 $stmt->bind_param("s", $lecturer_id);
 $stmt->execute();
 $result = $stmt->get_result();

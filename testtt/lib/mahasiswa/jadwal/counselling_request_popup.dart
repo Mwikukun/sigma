@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:testtt/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -20,8 +21,6 @@ class _CounsellingRequestPopupState extends State<CounsellingRequestPopup> {
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
 
-  final String baseUrl = "http://127.0.0.1/SIGMA/api";
-
   // =====================================================
   // 🔥 Ambil lecturer_id (employee_number) dari API
   // =====================================================
@@ -33,7 +32,7 @@ class _CounsellingRequestPopupState extends State<CounsellingRequestPopup> {
       if (studentId == null) return null;
 
       final res = await http.post(
-        Uri.parse("$baseUrl/get_lecturer_by_student.php"),
+        Uri.parse("${Config.baseUrl}get_lecturer_by_student.php"),
         body: {"student_id": studentId.toString()},
       );
 
@@ -54,11 +53,11 @@ class _CounsellingRequestPopupState extends State<CounsellingRequestPopup> {
   InputDecoration _inputDecoration(String hint) => InputDecoration(
     hintText: hint,
     filled: true,
-    fillColor: Colors.white.withOpacity(0.9),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
-      borderSide: BorderSide.none,
-    ),
+    fillColor: const Color(0xFFAAE7FF),
+    border: InputBorder.none,
+    enabledBorder: InputBorder.none,
+    focusedBorder: InputBorder.none,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
   );
 
   String _formatDate(DateTime d) {
@@ -120,7 +119,7 @@ class _CounsellingRequestPopupState extends State<CounsellingRequestPopup> {
 
     // 🔥 Kirim ke PHP
     final res = await http.post(
-      Uri.parse("$baseUrl/create_student_schedule.php"),
+      Uri.parse("${Config.baseUrl}create_student_schedule.php"),
       body: {
         "student_id": studentId.toString(),
         "lecture_id": lecturerId.toString(), // ✔ FIX PENTING!!
@@ -159,7 +158,7 @@ class _CounsellingRequestPopupState extends State<CounsellingRequestPopup> {
           child: Container(
             padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
-              color: Colors.lightBlue.shade100.withOpacity(0.97),
+              color: const Color(0xFF6ECFF6),
               borderRadius: BorderRadius.circular(20),
             ),
             child: SingleChildScrollView(

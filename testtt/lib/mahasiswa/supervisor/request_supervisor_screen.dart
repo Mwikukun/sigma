@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:testtt/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'request_supervisor_pending.dart';
@@ -14,7 +15,6 @@ class RequestSupervisorPage extends StatefulWidget {
 class _RequestSupervisorPageState extends State<RequestSupervisorPage>
     with SingleTickerProviderStateMixin {
   final TextEditingController searchController = TextEditingController();
-  final String baseUrl = "http://127.0.0.1/SIGMA/api";
 
   List<Map<String, dynamic>> supervisors = [];
   bool isLoading = true;
@@ -68,7 +68,9 @@ class _RequestSupervisorPageState extends State<RequestSupervisorPage>
 
   Future<void> fetchLecturers() async {
     try {
-      final res = await http.get(Uri.parse("$baseUrl/get_lecturers.php"));
+      final res = await http.get(
+        Uri.parse("${Config.baseUrl}get_lecturers.php"),
+      );
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data["success"] == true) {
@@ -81,13 +83,13 @@ class _RequestSupervisorPageState extends State<RequestSupervisorPage>
   Future<void> fetchFilters() async {
     try {
       final majorRes = await http.get(
-        Uri.parse("$baseUrl/supervisor/get_majors.php"),
+        Uri.parse("${Config.baseUrl}supervisor/get_majors.php"),
       );
       final progRes = await http.get(
-        Uri.parse("$baseUrl/supervisor/get_study_programs.php"),
+        Uri.parse("${Config.baseUrl}supervisor/get_study_programs.php"),
       );
       final expRes = await http.get(
-        Uri.parse("$baseUrl/supervisor/get_expertise.php"),
+        Uri.parse("${Config.baseUrl}supervisor/get_expertise.php"),
       );
 
       if (majorRes.statusCode == 200) {
@@ -485,113 +487,140 @@ class _RequestSupervisorPageState extends State<RequestSupervisorPage>
 
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: const Color(0xFF6ECFF6),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.person, size: 60, color: Colors.black),
-                const SizedBox(height: 10),
-                const Text(
-                  "Konfirmasi Pilihan",
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 17,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  "Apakah Anda yakin dengan pilihan dosen pembimbing anda?\nMasukkan judul Tugas Akhir anda.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: titleController,
-                  validator: (v) =>
-                      v == null || v.isEmpty ? 'Judul wajib diisi' : null,
-                  decoration: InputDecoration(
-                    hintText: 'Input judul Tugas Akhir',
-                    fillColor: Colors.white,
-                    filled: true,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+      barrierDismissible: false,
+      builder: (_) => Center(
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            width: 320,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6ECFF6),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.person, size: 56, color: Colors.black),
+                  const SizedBox(height: 10),
+                  const Text(
+                    "Konfirmasi Pilihan",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                        ),
-                        child: const Text('Kembali'),
+                  const SizedBox(height: 6),
+                  const Text(
+                    "Apakah Anda yakin dengan\npilihan dosen pembimbing anda?\nMasukkan judul Tugas Akhir anda.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 13,
+                      height: 1.4,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: titleController,
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Judul wajib diisi' : null,
+                    style: const TextStyle(fontSize: 13),
+                    decoration: InputDecoration(
+                      hintText: 'Input judul Tugas Akhir',
+                      hintStyle: TextStyle(color: Colors.grey.shade600),
+                      filled: true,
+                      fillColor: const Color(0xFFAAE7FF),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          if (formKey.currentState!.validate()) {
-                            final ok = await _submitSupervisorRequest(
-                              studentId: loggedInStudentNumber!,
-                              lecturerId: int.parse(
-                                sup['employee_number'].toString(),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 40,
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
                               ),
-                              thesisTitle: titleController.text,
-                            );
-
-                            if (ok && mounted) {
-                              Navigator.pop(context);
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => PendingSupervisorPage(
-                                    selectedSupervisor: sup['lecturer_name']
-                                        .toString(),
-                                  ),
-                                ),
-                              );
-                            } else {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      "Gagal mengirim pengajuan dosen.",
-                                    ),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                              }
-                            }
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2E3A87),
+                            ),
+                            child: const Text(
+                              'Kembali',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
                         ),
-                        child: const Text('Konfirmasi'),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: SizedBox(
+                          height: 40,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              if (formKey.currentState!.validate()) {
+                                final ok = await _submitSupervisorRequest(
+                                  studentId: loggedInStudentNumber!,
+                                  lecturerId: int.parse(
+                                    sup['employee_number'].toString(),
+                                  ),
+                                  thesisTitle: titleController.text,
+                                );
+
+                                if (ok && mounted) {
+                                  Navigator.pop(context);
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => PendingSupervisorPage(
+                                        selectedSupervisor: sup['lecturer_name']
+                                            .toString(),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2E3A87),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            child: const Text(
+                              'Konfirmasi',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -606,7 +635,7 @@ class _RequestSupervisorPageState extends State<RequestSupervisorPage>
   }) async {
     try {
       final res = await http.post(
-        Uri.parse("$baseUrl/request_supervisor.php"),
+        Uri.parse("${Config.baseUrl}request_supervisor.php"),
         body: {
           "student_id": studentId.toString(),
           "lecturer_id": lecturerId.toString(),

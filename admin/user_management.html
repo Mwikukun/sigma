@@ -4,6 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>SIGMA - User Management</title>
+    <script src="js/auth.js"></script>
+
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/user_management.css" />
   </head>
@@ -18,31 +20,22 @@
         <a href="dashboard.html"
           ><li><i class="fa fa-house"></i> Dashboard</li></a
         >
-        <a href="#"
-          ><li class="active"><i class="fa fa-users"></i> User Management</li></a
+        <a href="user_management.html"
+          ><li><i class="fa fa-users"></i> User Management</li></a
         >
-        <a href="document.html"
-          ><li><i class="fa fa-file-alt"></i> Document</li></a
+        <a href="document.html" class="active"
+          ><li><i class="fa fa-file-alt"></i> Final Thesis</li></a
         >
         <a href="announcement.html"
           ><li><i class="fa fa-bullhorn"></i> Announcement</li></a
         >
-      </ul>
-
-      <p class="section-title">Other</p>
-      <ul>
-        <li><i class="fa fa-database"></i> Logs</li>
       </ul>
     </aside>
 
     <!-- Main content -->
     <main class="main-content">
       <div class="topbar">
-        <h2>Dashboard <span>Welcome, Admin</span></h2>
-        <div class="topbar-icons">
-          <i class="fa fa-user-circle"></i>
-          <i class="fa fa-cog"></i>
-        </div>
+        <h2>User Management</h2>
       </div>
 
       <div class="toolbar">
@@ -203,7 +196,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
 
     <script>
-      const BASE_URL = "http://localhost/SIGMA/admin/php/";
+      const BASE_URL = window.BASE_URL;
 
       const addBtn = document.getElementById("openAddBtn");
       const addModal = document.getElementById("addModal");

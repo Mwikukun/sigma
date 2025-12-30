@@ -10,14 +10,17 @@ import 'mahasiswa/jadwal/counselling_schedule_screen.dart';
 import 'mahasiswa/dokumen/document_screen.dart';
 import 'mahasiswa/kanban/kanban_screen.dart';
 import 'mahasiswa/akun/profile_screen.dart';
+import 'mahasiswa/notification/notification_page.dart';
 
 // Dosen
 import 'dosen/dashboard_dosen_screen.dart';
 import 'dosen/jadwal/main_counselling.dart';
 import 'dosen/list_mahasiswa/list_mahasiswa.dart';
 import 'dosen/dokumen/document_screen_dosen.dart';
+import 'dosen/notification/notification_page_dosen.dart';
 // import 'dosen/dokumen/detail_document_screen.dart';
-import 'dosen/dokumen/kanban_screen_dosen.dart';
+// import 'dosen/dokumen/kanban_screen_dosen.dart';
+import 'dosen/akun/edit_profile_dosen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -89,14 +92,18 @@ class MyApp extends StatelessWidget {
         '/document_screen': (context) => const DocumentPage(),
         '/kanban_screen': (context) => const KanbanScreen(),
         '/profile_screen': (context) => const ProfileScreen(),
+        '/notification': (context) => const NotificationPage(),
 
         // Semua Halaman Dosen
         '/dashboard_dosen': (context) => const DashboardDosenScreen(),
         '/main_counselling': (context) => const MainCounsellingPage(),
         '/list_mahasiswa': (context) => const ListMahasiswaScreen(),
         '/document_screen_dosen': (context) => const DocumentScreen(),
+        '/notification_dosen': (context) => const NotificationPageDosen(),
         // '/detail_document_screen': (context) => const DetailDocumentScreen(),
-        '/kanban_screen_dosen': (context) => const KanbanScreenDosen(),
+        // '/kanban_screen_dosen': (context) => const KanbanScreenDosen(),
+        '/login': (context) => const LoginPage(),
+        '/edit-profile-dosen': (context) => const EditProfileDosen(),
       },
     );
   }

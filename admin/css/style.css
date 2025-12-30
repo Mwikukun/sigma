@@ -6,13 +6,15 @@
     padding: 0;
     box-sizing: border-box;
     font-family: "Poppins", sans-serif;
+    text-decoration: none;
 }
 
 body {
     background: #d6edff;
-    display: flex;
     min-height: 100vh;
+    overflow-x: hidden;
 }
+
 
 /* === SIDEBAR FIX === */
 .sidebar {
@@ -92,10 +94,13 @@ body {
 /* ====== MAIN CONTENT AREA ====== */
 .main-content {
     margin-left: 250px;
-    padding: 20px;
-    flex: 1;
-    background: #d6edff;
+    padding: 25px;
+    background-color: #d8ecff;
+    min-height: 100vh;
+    box-sizing: border-box;
 }
+
+
 
 /* ====== NAVBAR / TOPBAR ====== */
 .topbar {

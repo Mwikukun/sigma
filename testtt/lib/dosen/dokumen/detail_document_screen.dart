@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:testtt/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'kanban_screen_dosen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DetailDocumentScreen extends StatefulWidget {
   final String studentId;
@@ -40,9 +43,7 @@ class _DetailDocumentScreenState extends State<DetailDocumentScreen>
   // FETCH DOCUMENTS
   Future<void> fetchDocuments() async {
     try {
-      var url = Uri.parse(
-        "http://127.0.0.1/SIGMA/api/get_documents_by_student.php",
-      );
+      var url = Uri.parse("${Config.baseUrl}get_documents_by_student.php");
 
       var response = await http
           .post(url, body: {"student_id": widget.studentId})
@@ -65,7 +66,7 @@ class _DetailDocumentScreenState extends State<DetailDocumentScreen>
   Future<Map<String, dynamic>?> fetchLastFeedback(String docId) async {
     try {
       final url = Uri.parse(
-        "http://127.0.0.1/SIGMA/api/get_last_feedback.php?document_id=$docId",
+        "${Config.baseUrl}get_last_feedback.php?document_id=$docId",
       );
 
       final res = await http.get(url).timeout(const Duration(seconds: 8));
@@ -109,7 +110,7 @@ class _DetailDocumentScreenState extends State<DetailDocumentScreen>
     PlatformFile? file,
   }) async {
     try {
-      final uri = Uri.parse("http://127.0.0.1/SIGMA/api/add_feedback.php");
+      final uri = Uri.parse("${Config.baseUrl}add_feedback.php");
       final request = http.MultipartRequest("POST", uri);
 
       request.fields["document_id"] = docId;
@@ -135,7 +136,7 @@ class _DetailDocumentScreenState extends State<DetailDocumentScreen>
 
       // UPDATE STATUS
       await http.post(
-        Uri.parse("http://127.0.0.1/SIGMA/api/update_status.php"),
+        Uri.parse("${Config.baseUrl}update_status.php"),
         body: {"document_id": docId, "status": newStatus},
       );
 
@@ -146,6 +147,115 @@ class _DetailDocumentScreenState extends State<DetailDocumentScreen>
       fetchDocuments();
     } catch (e) {
       print("submitFeedback ERROR: $e");
+    }
+  }
+
+  // ================== TANDAI SELESAI MAHASISWA ==================
+  Future<void> _confirmFinishStudent() async {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xff8FD3FE), // konsisten
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 24,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ICON ORANG
+            const Icon(Icons.person, size: 50, color: Colors.black87),
+
+            const SizedBox(height: 10),
+
+            // TITLE
+            const Text(
+              "Konfirmasi Pilihan",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.black87,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // DESCRIPTION
+            const Text(
+              "Apakah Anda yakin ingin menandai mahasiswa ini selesai bimbingan?",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 15, color: Colors.black87),
+            ),
+
+            const SizedBox(height: 20),
+
+            // BUTTONS (KONSISTEN)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black54,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Kembali"),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xff2E3A87),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await _markStudentFinished();
+                  },
+                  child: const Text("Konfirmasi"),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _markStudentFinished() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lecturerId = prefs.getInt('lecturer_id');
+
+      if (lecturerId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Lecturer ID tidak ditemukan")),
+        );
+        return;
+      }
+
+      final res = await http.post(
+        Uri.parse("${Config.baseUrl}mark_student_finished.php"),
+        body: {
+          "student_id": widget.studentId,
+          "lecturer_id": lecturerId.toString(),
+        },
+      );
+
+      final data = jsonDecode(res.body);
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(data['message'] ?? "Berhasil")));
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Gagal menandai mahasiswa")));
     }
   }
 
@@ -196,36 +306,100 @@ class _DetailDocumentScreenState extends State<DetailDocumentScreen>
     width: double.infinity,
     color: const Color(0xff7EC9F5),
     padding: const EdgeInsets.all(16),
-    child: Row(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const CircleAvatar(
-          radius: 28,
-          backgroundColor: Colors.white,
-          child: Icon(Icons.person, size: 40, color: Color(0xff2E3A87)),
+        Row(
+          children: [
+            const CircleAvatar(
+              radius: 28,
+              backgroundColor: Colors.white,
+              child: Icon(Icons.person, size: 40, color: Color(0xff2E3A87)),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.nama,
+                    style: const TextStyle(
+                      color: Color(0xff2E3A87),
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    widget.nim,
+                    style: const TextStyle(color: Color(0xff2E3A87)),
+                  ),
+                  Text(
+                    widget.judul,
+                    style: const TextStyle(color: Color(0xff2E3A87)),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.nama,
-                style: const TextStyle(
-                  color: Color(0xff2E3A87),
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
+
+        const SizedBox(height: 12),
+
+        // 🔵 TOMBOL LIHAT KANBAN
+        Row(
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => KanbanScreenDosen(
+                      nama: widget.nama,
+                      nim: widget.nim,
+                      judulTugasAkhir: widget.judul,
+                      studentId: int.parse(widget.studentId),
+                    ),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xff2E3A87),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
                 ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
+                ),
+                elevation: 0,
               ),
-              Text(
-                widget.nim,
-                style: const TextStyle(color: Color(0xff2E3A87)),
+              child: const Text(
+                "Lihat Kanban",
+                style: TextStyle(color: Colors.white, fontSize: 13),
               ),
-              Text(
-                widget.judul,
-                style: const TextStyle(color: Color(0xff2E3A87)),
+            ),
+
+            const SizedBox(width: 10),
+
+            ElevatedButton(
+              onPressed: _confirmFinishStudent,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
+                ),
+                elevation: 0,
               ),
-            ],
-          ),
+              child: const Text(
+                "Tandai Selesai",
+                style: TextStyle(color: Colors.white, fontSize: 13),
+              ),
+            ),
+          ],
         ),
       ],
     ),

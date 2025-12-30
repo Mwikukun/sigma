@@ -1,6 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'edit_profile_dosen.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:testtt/config.dart';
 import 'logout_card_dosen.dart';
+import 'edit_profile_dosen.dart';
 
 class ProfileScreenDosen extends StatefulWidget {
   const ProfileScreenDosen({super.key});
@@ -10,139 +14,169 @@ class ProfileScreenDosen extends StatefulWidget {
 }
 
 class _ProfileScreenDosenState extends State<ProfileScreenDosen> {
-  bool isNotificationOn = true;
+  Map<String, dynamic>? profile;
+  bool isNotificationEnabled = true;
+  bool isLoading = true;
 
-  void _navigateTo(BuildContext context, Widget screen) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+  @override
+  void initState() {
+    super.initState();
+    _loadAll();
+  }
+
+  Future<void> _loadAll() async {
+    await Future.wait([_fetchProfile(), _loadNotificationSetting()]);
+    setState(() => isLoading = false);
+  }
+
+  // ================= PROFILE DOSEN =================
+  Future<void> _fetchProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lecturerId = prefs.getInt('lecturer_id');
+    if (lecturerId == null) return;
+
+    final res = await http.post(
+      Uri.parse('${Config.baseUrl}get_profile_dosen.php'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"lecturer_id": lecturerId.toString()}),
+    );
+
+    final data = jsonDecode(res.body);
+    if (data['success'] == true) {
+      profile = data['data'];
+    }
+  }
+
+  // ================= NOTIFICATION SETTING =================
+  Future<void> _loadNotificationSetting() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lecturerId = prefs.getInt('lecturer_id');
+    if (lecturerId == null) return;
+
+    final res = await http.post(
+      Uri.parse('${Config.baseUrl}get_notification_setting.php'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"lecturer_id": lecturerId.toString()}),
+    );
+
+    final data = jsonDecode(res.body);
+    isNotificationEnabled = data['is_enabled'] == 1;
+  }
+
+  Future<void> _updateNotificationSetting(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    final lecturerId = prefs.getInt('lecturer_id');
+    if (lecturerId == null) return;
+
+    await http.post(
+      Uri.parse('${Config.baseUrl}update_notification_setting.php'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "lecturer_id": lecturerId.toString(),
+        "is_enabled": value ? 1 : 0,
+      }),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    if (isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         title: const Text(
-          "PROFILE",
+          "Profile",
           style: TextStyle(
+            fontWeight: FontWeight.bold,
             color: Color(0xff2E3A87),
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1,
+            fontSize: 22,
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(
-          horizontal: screenWidth * 0.06,
-          vertical: 20,
-        ),
-        child: Column(
-          children: [
-            const CircleAvatar(
-              radius: 50,
-              backgroundColor: Color(0xffDDE7F7),
-              child: Icon(Icons.person, size: 70, color: Colors.grey),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "Nama Dosen",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            const Text("NIK", style: TextStyle(color: Colors.black54)),
-            const Text(
-              "Study Program",
-              style: TextStyle(color: Colors.black54),
-            ),
-            const Text("No. Telepon", style: TextStyle(color: Colors.black54)),
-            const SizedBox(height: 25),
-
-            // 🔔 Notifikasi
-            _menuTile(
-              icon: Icons.notifications,
-              title: "Notifikasi",
-              trailing: _customSwitch(),
-            ),
-
-            // ⚙️ Manajemen Akun
-            _menuButton(
-              icon: Icons.settings,
-              title: "Manajemen Akun",
-              onTap: () => _navigateTo(context, const EditProfileDosen()),
-            ),
-
-            // 🚪 Logout
-            _menuButton(
-              icon: Icons.logout,
-              title: "Logout",
-              onTap: () => _navigateTo(context, const LogoutCard()),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _customSwitch() {
-    return GestureDetector(
-      onTap: () {
-        setState(() => isNotificationOn = !isNotificationOn);
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 50,
-        height: 28,
-        decoration: BoxDecoration(
-          color: isNotificationOn
-              ? const Color(0xff6CC8FF)
-              : Colors.grey.shade400,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: AnimatedAlign(
-          duration: const Duration(milliseconds: 200),
-          alignment: isNotificationOn
-              ? Alignment.centerRight
-              : Alignment.centerLeft,
-          child: Container(
-            width: 22,
-            height: 22,
-            margin: const EdgeInsets.symmetric(horizontal: 3),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _menuTile({
-    required IconData icon,
-    required String title,
-    Widget? trailing,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xff2E3A87),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Column(
         children: [
-          Row(
-            children: [
-              Icon(icon, color: Colors.white),
-              const SizedBox(width: 10),
-              Text(title, style: const TextStyle(color: Colors.white)),
-            ],
+          const SizedBox(height: 20),
+
+          // ================= AVATAR =================
+          const CircleAvatar(
+            radius: 50,
+            backgroundColor: Color(0xFFE3F2FD),
+            child: Icon(Icons.person, size: 60, color: Colors.blue),
           ),
-          trailing ?? const SizedBox(),
+
+          const SizedBox(height: 12),
+
+          Text(
+            profile?['name'] ?? '-',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+
+          const SizedBox(height: 4),
+          Text(profile?['employee_number']?.toString() ?? '-'),
+          Text(profile?['study_program']?.toString() ?? '-'),
+          Text(profile?['expertise']?.toString() ?? '-'),
+          Text(profile?['phone_number']?.toString() ?? '-'),
+
+          const SizedBox(height: 24),
+
+          // ================= NOTIFICATION TOGGLE =================
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2E3A87),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.notifications, color: Colors.white),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Notifikasi',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                Switch(
+                  value: isNotificationEnabled,
+                  activeColor: Colors.lightBlueAccent,
+                  onChanged: (value) {
+                    setState(() => isNotificationEnabled = value);
+                    _updateNotificationSetting(value);
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // ================= MANAJEMEN AKUN =================
+          _menuButton(
+            icon: Icons.settings,
+            title: 'Manajemen Akun',
+            onTap: () {
+              showDialog(
+                context: context,
+                barrierDismissible: true,
+                builder: (context) {
+                  return Dialog(
+                    backgroundColor: Colors.transparent,
+                    insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: EditProfileDosen(),
+                  );
+                },
+              );
+            },
+          ),
+
+          const LogoutCard(),
         ],
       ),
     );
@@ -153,9 +187,27 @@ class _ProfileScreenDosenState extends State<ProfileScreenDosen> {
     required String title,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: _menuTile(icon: icon, title: title),
+    return Container(
+      height: 52,
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2E3A87),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: Colors.white),
+              const SizedBox(width: 12),
+              Text(title, style: const TextStyle(color: Colors.white)),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -1,17 +1,4 @@
 /* =====================
-   MAIN CONTENT
-===================== */
-.main-content {
-    margin-left: 250px;
-    padding: 25px;
-    width: calc(100% - 250px);
-    background-color: #d8ecff;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
-/* =====================
    DASHBOARD CARDS
 ===================== */
 .cards {
@@ -38,6 +25,136 @@
     font-weight: 600;
     margin-top: 5px;
 }
+
+/* =====================
+   PROFILE MODAL
+===================== */
+#profileBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+
+    font-size: 22px;
+    line-height: 1;
+    /* ⬅️ penting biar nggak turun/naik */
+    background: #eef3ff;
+    color: #2e3a87;
+    border-radius: 50%;
+    cursor: pointer;
+    user-select: none;
+
+    transform: translateY(-1px);
+    /* ⬅️ naikin dikit biar lebih center */
+    transition: 0.2s ease;
+}
+
+#profileBtn:hover {
+    background: #2e3a87;
+    color: #fff;
+    transform: translateY(-1px) scale(1.1);
+}
+
+.profile-wrapper {
+    position: relative;
+}
+
+.profile-menu {
+    position: absolute;
+    right: 0;
+    top: 45px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .15);
+    display: none;
+    overflow: hidden;
+    min-width: 150px;
+}
+
+.profile-menu button {
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+}
+
+.profile-menu button:hover {
+    background: #f1f5ff;
+}
+
+.profile-menu .logout {
+    color: #e53935;
+}
+
+.profile-menu.show {
+    display: block;
+}
+
+
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    /* ⬅️ awalnya disembunyiin */
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.modal-box {
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    width: 320px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.modal-box h3 {
+    margin-bottom: 15px;
+    color: #2e3a87;
+}
+
+.modal-box input {
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.modal-actions button {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.modal-actions button:first-child {
+    background: #2e3a87;
+    color: #fff;
+}
+
+.modal-actions button:last-child {
+    background: #ccc;
+}
+
+.modal.show {
+    display: flex;
+    /* ⬅️ muncul kalau ada class show */
+}
+
 
 /* =====================
    CONTENT SECTION

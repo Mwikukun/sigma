@@ -17,7 +17,16 @@ try {
             g.is_approved,
             s.student_number,
             s.thesis AS thesis_title,
-            u.name AS student_name
+            u.name AS student_name,
+
+            (
+                SELECT d.status
+                FROM documents d
+                WHERE d.student_id = s.student_number
+                ORDER BY d.id DESC
+                LIMIT 1
+            ) AS last_document_status
+
         FROM guidances g
         JOIN students s ON g.student_id = s.student_number
         JOIN users u ON s.user_id = u.id
@@ -34,6 +43,12 @@ try {
     $data = [];
     while ($row = $result->fetch_assoc()) {
         $row['is_approved'] = intval($row['is_approved']);
+
+        // kalau belum pernah upload dokumen
+        if ($row['last_document_status'] === null) {
+            $row['last_document_status'] = "pending";
+        }
+
         $data[] = $row;
     }
 

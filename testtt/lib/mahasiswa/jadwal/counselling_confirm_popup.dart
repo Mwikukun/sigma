@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:testtt/config.dart';
 import 'package:http/http.dart' as http;
 
 class CounsellingConfirmPopup extends StatefulWidget {
@@ -44,7 +45,7 @@ class _CounsellingConfirmPopupState extends State<CounsellingConfirmPopup> {
     setState(() => _isLoading = true);
 
     try {
-      final uri = Uri.parse("http://127.0.0.1/SIGMA/api/attendance_add.php");
+      final uri = Uri.parse("${Config.baseUrl}attendance_add.php");
       final response = await http.post(
         uri,
         headers: {"Content-Type": "application/json"},
@@ -119,6 +120,15 @@ class _CounsellingConfirmPopupState extends State<CounsellingConfirmPopup> {
                   color: Colors.black,
                 ),
               ),
+              const Text(
+                "Konfirmasi kehadiran Anda pada jadwal bimbingan ini.",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.w200,
+                  fontSize: 14,
+                  color: Colors.black,
+                ),
+              ),
               const SizedBox(height: 10),
 
               // 🔹 Pilihan hadir / tidak hadir
@@ -126,16 +136,26 @@ class _CounsellingConfirmPopupState extends State<CounsellingConfirmPopup> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ChoiceChip(
-                    label: const Text("✅ Hadir"),
+                    label: const Text("Hadir"),
                     selected: _status == "hadir",
                     onSelected: (v) => setState(() => _status = "hadir"),
                     selectedColor: Colors.green.shade300,
+                    backgroundColor: const Color(0xFFAAE7FF),
+                    labelStyle: TextStyle(
+                      color: _status == "hadir" ? Colors.white : Colors.black,
+                    ),
                   ),
                   ChoiceChip(
-                    label: const Text("❌ Tidak Hadir"),
+                    label: const Text("Tidak Hadir"),
                     selected: _status == "tidak_hadir",
                     onSelected: (v) => setState(() => _status = "tidak_hadir"),
                     selectedColor: Colors.red.shade300,
+                    backgroundColor: const Color(0xFFAAE7FF),
+                    labelStyle: TextStyle(
+                      color: _status == "tidak_hadir"
+                          ? Colors.white
+                          : Colors.black,
+                    ),
                   ),
                 ],
               ),
@@ -149,10 +169,8 @@ class _CounsellingConfirmPopupState extends State<CounsellingConfirmPopup> {
                   decoration: InputDecoration(
                     hintText: "Alasan ketidakhadiran",
                     filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    fillColor: const Color(0xFFAAE7FF),
+                    border: InputBorder.none,
                   ),
                 ),
               ],
@@ -166,7 +184,8 @@ class _CounsellingConfirmPopupState extends State<CounsellingConfirmPopup> {
                         ElevatedButton(
                           onPressed: () => Navigator.pop(context),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black54,
+                            backgroundColor: Colors.black,
+                            foregroundColor: Colors.white,
                           ),
                           child: const Text("Kembali"),
                         ),
@@ -174,6 +193,7 @@ class _CounsellingConfirmPopupState extends State<CounsellingConfirmPopup> {
                           onPressed: _submitAttendance,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xff2E3A87),
+                            foregroundColor: Colors.white,
                           ),
                           child: const Text("Konfirmasi"),
                         ),

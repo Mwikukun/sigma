@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:testtt/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:testtt/mahasiswa/supervisor/request_supervisor_pending.dart';
@@ -17,14 +18,12 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
 
-  final String baseUrl = "http://127.0.0.1/SIGMA/api";
-
   Future<void> _loginUser() async {
     if (_formKey.currentState!.validate()) {
       final username = _usernameController.text.trim();
       final password = _passwordController.text.trim();
 
-      final url = Uri.parse('$baseUrl/login.php');
+      final url = Uri.parse('${Config.baseUrl}login.php');
 
       try {
         final response = await http.post(
@@ -104,7 +103,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _checkGuidanceStatus(BuildContext context, int studentId) async {
     try {
       final res = await http.post(
-        Uri.parse("$baseUrl/get_guidance_status.php"),
+        Uri.parse("${Config.baseUrl}get_guidance_status.php"),
         body: {"student_id": studentId.toString()},
       );
 
@@ -122,6 +121,7 @@ class _LoginPageState extends State<LoginPage> {
             final lecturerName = info["lecturer_name"] ?? "-";
 
             if (status == "0" || status == 0) {
+              // pending supervisor
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
@@ -130,8 +130,13 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               );
             } else if (status == "1" || status == 1) {
+              // bimbingan aktif
+              Navigator.pushReplacementNamed(context, '/dashboard');
+            } else if (status == "3" || status == 3) {
+              // ✅ BIMBINGAN SELESAI
               Navigator.pushReplacementNamed(context, '/dashboard');
             } else {
+              // reject / unknown
               Navigator.pushReplacementNamed(context, '/supervisor');
             }
           }
@@ -202,7 +207,6 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(
                         color: Color(0xFF2E3A87),
                         fontWeight: FontWeight.w500,
-                        decoration: TextDecoration.underline,
                         fontFamily: 'Poppins',
                       ),
                     ),

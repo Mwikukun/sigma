@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:testtt/config.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'main_counselling.dart';
@@ -14,7 +15,7 @@ class ListMahasiswaPage extends StatefulWidget {
 }
 
 class _ListMahasiswaPageState extends State<ListMahasiswaPage> {
-  final String baseUrl = "http://127.0.0.1/SIGMA/api/schedules";
+  final String baseUrl = "${Config.baseUrl}schedules";
   List<dynamic> students = [];
   bool isLoading = true;
 
@@ -26,7 +27,7 @@ class _ListMahasiswaPageState extends State<ListMahasiswaPage> {
     loadLecturerId();
   }
 
-  // 🔹 Ambil lecturer_id dari SharedPreferences
+  // ================== AMBIL ID DOSEN ==================
   Future<void> loadLecturerId() async {
     final prefs = await SharedPreferences.getInstance();
     lecturerId = prefs.getInt('lecturer_id');
@@ -34,30 +35,51 @@ class _ListMahasiswaPageState extends State<ListMahasiswaPage> {
     if (lecturerId != null) {
       fetchStudents();
     } else {
-      debugPrint("❌ lecturer_id tidak ditemukan di SharedPreferences");
+      debugPrint("❌ lecturer_id tidak ditemukan");
       setState(() => isLoading = false);
     }
   }
 
-  // 🔹 Ambil daftar mahasiswa + status kehadiran
+  // ================== GROUPING ==================
+  List<dynamic> get hadir =>
+      students.where((s) => s['status'] == 'hadir').toList();
+
+  List<dynamic> get tidakHadir =>
+      students.where((s) => s['status'] == 'tidak_hadir').toList();
+
+  List<dynamic> get belumKonfirmasi => students
+      .where((s) => s['status'] != 'hadir' && s['status'] != 'tidak_hadir')
+      .toList();
+
+  Widget sectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.indigo,
+        ),
+      ),
+    );
+  }
+
+  // ================== FETCH MAHASISWA ==================
   Future<void> fetchStudents() async {
     setState(() => isLoading = true);
 
     try {
       final url = Uri.parse(
-        "$baseUrl/get_attendances_by_schedule.php"
+        "${Config.baseUrl}schedules/get_attendances_by_schedule.php"
         "?schedule_id=${widget.schedule.id}"
         "&lecturer_id=$lecturerId",
       );
-
-      debugPrint("🔍 CALL API: $url");
 
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        debugPrint("📥 Response: $data");
-
         if (data['status'] == 'success') {
           setState(() {
             students = data['data'];
@@ -71,7 +93,7 @@ class _ListMahasiswaPageState extends State<ListMahasiswaPage> {
     setState(() => isLoading = false);
   }
 
-  // 🔹 Warna status
+  // ================== STATUS ==================
   Color getStatusColor(String status) {
     switch (status) {
       case "hadir":
@@ -83,7 +105,6 @@ class _ListMahasiswaPageState extends State<ListMahasiswaPage> {
     }
   }
 
-  // 🔹 Format status
   String formatStatus(String status) {
     switch (status) {
       case "hadir":
@@ -95,6 +116,93 @@ class _ListMahasiswaPageState extends State<ListMahasiswaPage> {
     }
   }
 
+  // ================== CARD MAHASISWA ==================
+  Widget buildStudentCard(dynamic s) {
+    final color = getStatusColor(s['status']);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A3593),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const CircleAvatar(
+              radius: 28,
+              backgroundColor: Colors.white,
+              child: Icon(Icons.person, size: 40, color: Colors.lightBlue),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    s['name'],
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    s['nim'] ?? '-',
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                  Text(
+                    s['project'] ?? '-',
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      formatStatus(s['status']),
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                  ),
+                  if (s['status'] == "tidak_hadir" &&
+                      s['reason'] != null &&
+                      s['reason'].toString().isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        "Alasan: ${s['reason']}",
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ================== UI ==================
   @override
   Widget build(BuildContext context) {
     final isWideScreen = MediaQuery.of(context).size.width > 700;
@@ -110,7 +218,6 @@ class _ListMahasiswaPageState extends State<ListMahasiswaPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🔹 Header
               Row(
                 children: [
                   IconButton(
@@ -119,7 +226,7 @@ class _ListMahasiswaPageState extends State<ListMahasiswaPage> {
                   ),
                   const SizedBox(width: 8),
                   const Text(
-                    "Student List",
+                    "List Mahasiswa",
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -130,7 +237,6 @@ class _ListMahasiswaPageState extends State<ListMahasiswaPage> {
               ),
               const SizedBox(height: 16),
 
-              // 🔹 Info Jadwal
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
@@ -141,147 +247,42 @@ class _ListMahasiswaPageState extends State<ListMahasiswaPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Judul: ${widget.schedule.title}"),
-                    Text("Sesi: ${widget.schedule.sesi}"),
+                    Text("Bimbingan - ${widget.schedule.title}"),
+                    Text("${widget.schedule.sesi}"),
                     Text(
-                      "Tanggal: ${widget.schedule.date.day}-"
-                      "${widget.schedule.date.month}-"
-                      "${widget.schedule.date.year}",
+                      "${widget.schedule.date.day} "
+                      "${widget.schedule.date.month} "
+                      "${widget.schedule.date.year}, "
+                      "${widget.schedule.time.format(context)}",
                     ),
-                    Text("Waktu: ${widget.schedule.time.format(context)}"),
-                    Text("Lokasi: ${widget.schedule.location}"),
-                    if (widget.schedule.description.isNotEmpty)
-                      Text("Deskripsi: ${widget.schedule.description}"),
+                    Text(widget.schedule.location),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
 
-              // 🔹 Daftar mahasiswa
               Expanded(
                 child: isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : students.isEmpty
-                    ? const Center(
-                        child: Text(
-                          "Belum ada mahasiswa bimbingan.",
-                          style: TextStyle(color: Colors.black54),
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: students.length,
-                        itemBuilder: (context, index) {
-                          final s = students[index];
-                          final color = getStatusColor(s['status']);
-
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 14),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2A3593),
-                              borderRadius: BorderRadius.circular(14),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.15),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(14),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const CircleAvatar(
-                                    radius: 28,
-                                    backgroundColor: Colors.white,
-                                    child: Icon(
-                                      Icons.person,
-                                      size: 40,
-                                      color: Colors.lightBlue,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-
-                                  // 🔹 Info Mahasiswa
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          s['name'],
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        Text(
-                                          s['nim'] ?? '-',
-                                          style: const TextStyle(
-                                            color: Colors.white70,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                        Text(
-                                          s['major'] ?? '-',
-                                          style: const TextStyle(
-                                            color: Colors.white70,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                        Text(
-                                          s['project'] ?? '-',
-                                          style: const TextStyle(
-                                            color: Colors.white70,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: color,
-                                            borderRadius: BorderRadius.circular(
-                                              10,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            formatStatus(s['status']),
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ),
-                                        if (s['status'] == "tidak_hadir" &&
-                                            s['reason'] != null &&
-                                            s['reason'].toString().isNotEmpty)
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                              top: 4,
-                                            ),
-                                            child: Text(
-                                              "Alasan: ${s['reason']}",
-                                              style: const TextStyle(
-                                                color: Colors.white70,
-                                                fontSize: 12,
-                                                fontStyle: FontStyle.italic,
-                                              ),
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
+                    ? const Center(child: Text("Belum ada mahasiswa bimbingan"))
+                    : ListView(
+                        children: [
+                          if (hadir.isNotEmpty) ...[
+                            sectionTitle("Mahasiswa yang Hadir"),
+                            ...hadir.map(buildStudentCard),
+                            const SizedBox(height: 16),
+                          ],
+                          if (tidakHadir.isNotEmpty) ...[
+                            sectionTitle("Mahasiswa yang Tidak Hadir"),
+                            ...tidakHadir.map(buildStudentCard),
+                            const SizedBox(height: 16),
+                          ],
+                          if (belumKonfirmasi.isNotEmpty) ...[
+                            sectionTitle("Mahasiswa yang Tidak Konfirmasi"),
+                            ...belumKonfirmasi.map(buildStudentCard),
+                          ],
+                        ],
                       ),
               ),
             ],

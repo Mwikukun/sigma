@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:testtt/config.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
@@ -57,7 +58,7 @@ class _UploadFilePopupState extends State<UploadFilePopup> {
     final prefs = await SharedPreferences.getInstance();
     final studentId = prefs.getInt('student_number') ?? 1; // fallback
 
-    final uri = Uri.parse("http://127.0.0.1/SIGMA/api/upload_document.php");
+    final uri = Uri.parse("${Config.baseUrl}upload_document.php");
 
     var request = http.MultipartRequest("POST", uri);
 

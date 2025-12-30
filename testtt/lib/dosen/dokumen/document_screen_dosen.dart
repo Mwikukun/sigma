@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:testtt/config.dart';
 import 'package:http/http.dart' as http;
 import 'detail_document_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,8 +25,9 @@ class _DocumentScreenState extends State<DocumentScreen> {
   }
 
   Future<void> _loadLecturerId() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     lecturerId = prefs.getInt('lecturer_id');
+
     if (lecturerId != null) {
       fetchApprovedStudents();
     } else {
@@ -36,29 +38,57 @@ class _DocumentScreenState extends State<DocumentScreen> {
   Future<void> fetchApprovedStudents() async {
     setState(() => isLoading = true);
 
-    var url = Uri.parse(
-      "http://127.0.0.1/SIGMA/api/get_approved_guidances.php",
-    );
-
-    var response = await http.post(
-      url,
+    final response = await http.post(
+      Uri.parse("${Config.baseUrl}get_approved_guidances.php"),
       body: {"lecturer_id": lecturerId.toString()},
     );
 
     if (response.statusCode == 200) {
-      var jsonData = json.decode(response.body);
+      final jsonData = json.decode(response.body);
       if (jsonData['success'] == true) {
-        setState(() {
-          mahasiswaApproved = jsonData['data'];
-        });
-      } else {
-        print("API Success = false → ${jsonData['message']}");
+        mahasiswaApproved = jsonData['data'];
       }
-    } else {
-      print("Server Error: ${response.statusCode}");
     }
 
     setState(() => isLoading = false);
+  }
+
+  // =====================================================
+  // STATUS BADGE
+  // =====================================================
+  Widget _statusBadge(String status) {
+    Color bg;
+    String text;
+
+    switch (status) {
+      case "approved":
+        bg = Colors.green;
+        text = "Approved";
+        break;
+      case "revision":
+        bg = Colors.purple;
+        text = "Revisi";
+        break;
+      default:
+        bg = Colors.orange;
+        text = "Pending";
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
   }
 
   @override
@@ -70,6 +100,20 @@ class _DocumentScreenState extends State<DocumentScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xfff5f6fa),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          "Document",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xff2E3A87),
+            fontSize: 22,
+          ),
+        ),
+      ),
       body: SafeArea(
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -77,15 +121,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    const Text(
-                      "Document",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xff2E3A87),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
                     _searchBar(),
                     const SizedBox(height: 20),
                     ..._buildList(filtered),
@@ -105,23 +141,31 @@ class _DocumentScreenState extends State<DocumentScreen> {
         hintText: "Cari mahasiswa...",
         filled: true,
         fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide.none,
+        ),
       ),
     );
   }
 
   List<Widget> _buildList(List filtered) {
     if (filtered.isEmpty) {
-      return [const Text("Belum ada mahasiswa yang disetujui.")];
+      return const [
+        Text(
+          "Belum ada mahasiswa yang disetujui.",
+          style: TextStyle(color: Colors.black54),
+        ),
+      ];
     }
 
     return List.generate(filtered.length, (i) {
       final mhs = filtered[i];
-
       final nama = mhs["student_name"]?.toString() ?? "-";
       final nim = mhs["student_number"]?.toString() ?? "-";
       final thesis = mhs["thesis_title"]?.toString() ?? "-";
-      final studentId = mhs["student_id"].toString();
+      final studentId = mhs["student_id"]?.toString() ?? "";
+      final status = mhs["last_document_status"] ?? "pending";
 
       return GestureDetector(
         onTap: () {
@@ -155,6 +199,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // NAMA
                     Text(
                       nama,
                       style: const TextStyle(
@@ -163,15 +208,31 @@ class _DocumentScreenState extends State<DocumentScreen> {
                         fontSize: 15,
                       ),
                     ),
+
+                    const SizedBox(height: 4),
+
+                    // NIM
                     Text(nim, style: const TextStyle(color: Colors.white70)),
+
+                    // JUDUL
                     Text(
                       "Judul: $thesis",
                       style: const TextStyle(color: Colors.white),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
+                    const SizedBox(height: 6),
+
+                    // STATUS (DI BAWAH JUDUL)
+                    _statusBadge(status),
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios, color: Colors.white),
+              const Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.white,
+                size: 16,
+              ),
             ],
           ),
         ),

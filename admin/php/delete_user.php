@@ -1,6 +1,9 @@
 <?php
-include "config.php";
+
 header("Content-Type: application/json");
+
+require_once "guard.php";
+require_once "config.php";
 
 $data = json_decode(file_get_contents("php://input"), true);
 $id = $data["id"] ?? 0;

@@ -2,18 +2,75 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SIGMA - Document Management</title>
+    <title>SIGMA - Final Thesis</title>
+    <script src="js/auth.js"></script>
+
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/document_management.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+
+    <style>
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+      }
+
+      .pagination {
+        margin-top: 15px;
+        display: flex;
+        gap: 6px;
+      }
+
+      .pagination button {
+        padding: 6px 10px;
+        border: none;
+        cursor: pointer;
+        background: #eee;
+        border-radius: 4px;
+      }
+
+      .pagination button.active {
+        background: #3b82f6;
+        color: white;
+      }
+
+      select {
+        padding: 6px;
+      }
+
+      .dropdown {
+        position: relative;
+      }
+
+      .dropdown-menu {
+        position: absolute;
+        top: 42px;
+        left: 0;
+        background: white;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: none;
+        min-width: 180px;
+        z-index: 99;
+      }
+
+      .dropdown-menu div {
+        padding: 10px;
+        cursor: pointer;
+      }
+
+      .dropdown-menu div:hover {
+        background: #f1f5f9;
+      }
+    </style>
   </head>
 
   <body>
     <!-- Sidebar -->
     <aside class="sidebar">
       <h2 class="logo">SIGMA</h2>
-
       <p class="section-title">Main</p>
       <ul>
         <a href="dashboard.html"
@@ -22,201 +79,237 @@
         <a href="user_management.html"
           ><li><i class="fa fa-users"></i> User Management</li></a
         >
-        <a href="#"
-          ><li class="active"><i class="fa fa-file-alt"></i> Document</li></a
+        <a href="document.html" class="active"
+          ><li><i class="fa fa-file-alt"></i> Final Thesis</li></a
         >
         <a href="announcement.html"
           ><li><i class="fa fa-bullhorn"></i> Announcement</li></a
         >
-      </ul>
-
-      <p class="section-title">Other</p>
-      <ul>
-        <li><i class="fa fa-database"></i> Logs</li>
       </ul>
     </aside>
 
     <!-- Main -->
     <main class="main-content">
       <div class="topbar">
-        <h2>Document <span>Welcome, Admin1</span></h2>
-        <div class="topbar-icons">
-          <i class="fa fa-user-circle"></i>
-          <i class="fa fa-cog"></i>
+        <h2>Final Thesis</h2>
+      </div>
+
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <input type="text" id="searchBox" placeholder="🔍 Search..." class="search-box" />
+
+        <div style="display: flex; gap: 8px">
+          <!-- SORT -->
+          <div class="dropdown">
+            <button class="export-btn" onclick="toggleSort()"><i class="fa fa-sort"></i> Sort</button>
+
+            <div class="dropdown-menu" id="sortMenu">
+              <div onclick="sortData('az')">Nama A–Z</div>
+              <div onclick="sortData('za')">Nama Z–A</div>
+              <div onclick="sortData('new')">Tanggal Terbaru</div>
+              <div onclick="sortData('old')">Tanggal Terlama</div>
+            </div>
+          </div>
+
+          <!-- EXPORT -->
+          <button class="export-btn" onclick="exportZIP()"><i class="fa fa-download"></i> Export ZIP</button>
         </div>
       </div>
 
-      <div class="toolbar">
-        <input type="text" placeholder="🔍 Search Document .." class="search-box" />
-        <button class="export-btn"><i class="fa fa-download"></i> Export</button>
-      </div>
-
+      <!-- TABLE -->
       <div class="table-container card">
         <table>
           <thead>
             <tr>
-              <th>Bab</th>
               <th>Nama Dokumen</th>
-              <th>Status</th>
               <th>Pemilik</th>
               <th>Judul TA</th>
               <th>Waktu Upload</th>
               <th>Aksi</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>Bab 1</td>
-              <td>Bab1.pdf</td>
-              <td><span class="status pending">Pending</span></td>
-              <td>Mhs1</td>
-              <td>Aplikasi Belajar</td>
-              <td>1 Juli 2025, 11.35pm</td>
-              <td>
-                <span onclick="openEdit('Bab 1','Bab1.pdf','Pending','Mhs1','Aplikasi Belajar','1 Juli 2025','11.35pm')" class="aksi-btn">✏️</span>
-                <span onclick="openDelete('Bab1.pdf')" class="aksi-btn">🗑️</span>
-              </td>
-            </tr>
-            <tr>
-              <td>Bab 2</td>
-              <td>Bab2.pdf</td>
-              <td><span class="status revisi">Revisi</span></td>
-              <td>Mhs2</td>
-              <td>Aplikasi Belanja</td>
-              <td>1 Juli 2025, 11.50pm</td>
-              <td>
-                <span onclick="openEdit('Bab 2','Bab2.pdf','Revisi','Mhs2','Aplikasi Belanja','1 Juli 2025','11.50pm')" class="aksi-btn">✏️</span>
-                <span onclick="openDelete('Bab2.pdf')" class="aksi-btn">🗑️</span>
-              </td>
-            </tr>
-            <tr>
-              <td>Bab 3</td>
-              <td>Bab3.pdf</td>
-              <td><span class="status disetujui">Disetujui</span></td>
-              <td>Mhs3</td>
-              <td>Aplikasi Game</td>
-              <td>2 Juli 2025, 11.35pm</td>
-              <td>
-                <span onclick="openEdit('Bab 3','Bab3.pdf','Disetujui','Mhs3','Aplikasi Game','2 Juli 2025','11.35pm')" class="aksi-btn">✏️</span>
-                <span onclick="openDelete('Bab3.pdf')" class="aksi-btn">🗑️</span>
-              </td>
-            </tr>
-            <tr>
-              <td>Bab 4</td>
-              <td>Bab4.pdf</td>
-              <td><span class="status revisi">Revisi</span></td>
-              <td>Mhs4</td>
-              <td>Aplikasi Katalog</td>
-              <td>3 Juli 2025, 11.50pm</td>
-              <td>
-                <span onclick="openEdit('Bab 4','Bab4.pdf','Revisi','Mhs4','Aplikasi Katalog','3 Juli 2025','11.50pm')" class="aksi-btn">✏️</span>
-                <span onclick="openDelete('Bab4.pdf')" class="aksi-btn">🗑️</span>
-              </td>
-            </tr>
-          </tbody>
+          <tbody id="documentTable"></tbody>
         </table>
       </div>
+
+      <div class="pagination" id="pagination"></div>
     </main>
 
-    <!-- Modal Edit -->
-    <div class="modal" id="editModal">
-      <div class="modal-content">
-        <h3>Edit Document</h3>
-        <form id="editForm">
-          <div class="form-row">
-            <label>Bab</label>
-            <input type="text" id="editBab" />
-          </div>
-          <div class="form-row">
-            <label>Status</label>
-            <select id="editStatus">
-              <option>Pending</option>
-              <option>Revisi</option>
-              <option>Disetujui</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <label>Nama Dokumen</label>
-            <input type="text" id="editNama" />
-          </div>
-          <div class="form-row">
-            <label>Pemilik</label>
-            <input type="text" id="editPemilik" />
-          </div>
-          <div class="form-row">
-            <label>Judul TA</label>
-            <input type="text" id="editJudul" />
-          </div>
-          <div class="form-row">
-            <label>Date</label>
-            <input type="text" id="editDate" />
-          </div>
-          <div class="form-row">
-            <label>Time</label>
-            <input type="text" id="editTime" />
-          </div>
-          <div class="form-row">
-            <label>Document</label>
-            <div class="file-drop">📎 Drag files here</div>
-          </div>
-          <div class="modal-actions">
-            <button type="button" class="btn-cancel" onclick="closeEdit()">Cancel</button>
-            <button type="submit" class="btn-done">Done</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Modal Delete -->
+    <!-- MODAL DELETE -->
     <div class="modal" id="deleteModal">
       <div class="modal-content small">
-        <h3>Delete Document</h3>
-        <p>Are you sure you want to delete <span id="deleteDocName"></span>?</p>
+        <h3>Delete Final Thesis</h3>
+        <p>
+          Yakin hapus <b><span id="deleteDocName"></span></b>?
+        </p>
         <div class="modal-actions">
-          <button class="btn-cancel" onclick="closeDelete()">Cancel</button>
-          <button class="btn-delete" onclick="confirmDelete()">Delete</button>
+          <button onclick="closeDelete()">Cancel</button>
+          <button onclick="confirmDelete()">Delete</button>
         </div>
       </div>
     </div>
 
     <script>
-      // === MODAL EDIT ===
-      function openEdit(bab, nama, status, pemilik, judul, date, time) {
-        document.getElementById("editBab").value = bab;
-        document.getElementById("editNama").value = nama;
-        document.getElementById("editStatus").value = status;
-        document.getElementById("editPemilik").value = pemilik;
-        document.getElementById("editJudul").value = judul;
-        document.getElementById("editDate").value = date;
-        document.getElementById("editTime").value = time;
-        document.getElementById("editModal").style.display = "flex";
-      }
-      function closeEdit() {
-        document.getElementById("editModal").style.display = "none";
+      const BASE_URL = window.BASE_URL;
+      const table = document.getElementById("documentTable");
+      const searchBox = document.getElementById("searchBox");
+
+      let allData = [];
+      let filteredData = [];
+      let deleteId = null;
+      let currentPage = 1;
+      const rowsPerPage = 15;
+
+      /* LOAD DATA */
+      async function loadFinalThesis() {
+        const res = await fetch(BASE_URL + "get_final_thesis.php", {
+          credentials: "include",
+        });
+
+        if (res.status === 401) {
+          window.location.replace("login_admin.html");
+          return;
+        }
+
+        allData = await res.json();
+        filteredData = [...allData];
+        renderTable();
       }
 
-      // === MODAL DELETE ===
-      let docToDelete = null;
-      function openDelete(name) {
-        docToDelete = name;
-        document.getElementById("deleteDocName").textContent = name;
+      loadFinalThesis();
+
+      /* RENDER TABLE */
+      function renderTable() {
+        table.innerHTML = "";
+
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        const pageData = filteredData.slice(start, end);
+
+        if (!pageData.length) {
+          table.innerHTML = `<tr><td colspan="5" align="center">Tidak ada data</td></tr>`;
+          return;
+        }
+
+        pageData.forEach((d) => {
+          table.innerHTML += `
+      <tr>
+        <td>
+          <a href="../uploads/documents/${d.nama_dokumen}" target="_blank">
+            ${cleanFileName(d.nama_dokumen)}
+          </a>
+        </td>
+        <td>${d.pemilik}</td>
+        <td>${d.judul_ta}</td>
+        <td>${formatDate(d.waktu_upload)}</td>
+        <td>
+          <span onclick="openDelete('${cleanFileName(d.nama_dokumen)}', ${d.id})">🗑️</span>
+        </td>
+      </tr>
+    `;
+        });
+
+        renderPagination();
+      }
+
+      /* PAGINATION */
+      function renderPagination() {
+        const pageCount = Math.ceil(filteredData.length / rowsPerPage);
+        const pagination = document.getElementById("pagination");
+        pagination.innerHTML = "";
+
+        for (let i = 1; i <= pageCount; i++) {
+          const btn = document.createElement("button");
+          btn.innerText = i;
+          btn.className = i === currentPage ? "active" : "";
+          btn.onclick = () => {
+            currentPage = i;
+            renderTable();
+          };
+          pagination.appendChild(btn);
+        }
+      }
+
+      /* SEARCH */
+      searchBox.addEventListener("input", () => {
+        const q = searchBox.value.toLowerCase();
+        filteredData = allData.filter((d) => d.nama_dokumen.toLowerCase().includes(q) || d.pemilik.toLowerCase().includes(q) || d.judul_ta.toLowerCase().includes(q));
+        currentPage = 1;
+        renderTable();
+      });
+
+      function toggleSort() {
+        const menu = document.getElementById("sortMenu");
+        menu.style.display = menu.style.display === "block" ? "none" : "block";
+      }
+
+      function sortData(type) {
+        if (type === "az") {
+          filteredData.sort((a, b) => a.pemilik.localeCompare(b.pemilik));
+        } else if (type === "za") {
+          filteredData.sort((a, b) => b.pemilik.localeCompare(a.pemilik));
+        } else if (type === "new") {
+          filteredData.sort((a, b) => new Date(b.waktu_upload) - new Date(a.waktu_upload));
+        } else if (type === "old") {
+          filteredData.sort((a, b) => new Date(a.waktu_upload) - new Date(b.waktu_upload));
+        }
+
+        currentPage = 1;
+        renderTable();
+        document.getElementById("sortMenu").style.display = "none";
+      }
+
+      /* Tutup dropdown kalau klik di luar */
+      document.addEventListener("click", function (e) {
+        const dropdown = document.querySelector(".dropdown");
+        if (!dropdown.contains(e.target)) {
+          document.getElementById("sortMenu").style.display = "none";
+        }
+      });
+
+      /* EXPORT ZIP */
+      function exportZIP() {
+        window.location.href = BASE_URL + "export_final_thesis_zip.php";
+      }
+
+      /* DELETE */
+      function openDelete(name, id) {
+        deleteId = id;
+        document.getElementById("deleteDocName").innerText = name;
         document.getElementById("deleteModal").style.display = "flex";
       }
+
       function closeDelete() {
         document.getElementById("deleteModal").style.display = "none";
       }
-      function confirmDelete() {
-        alert("Document " + docToDelete + " deleted!");
+
+      async function confirmDelete() {
+        const res = await fetch(BASE_URL + "delete_final_thesis.php?id=" + deleteId, {
+          credentials: "include",
+        });
+
+        if (res.status === 401) {
+          window.location.replace("login_admin.html");
+          return;
+        }
+
         closeDelete();
+        loadFinalThesis();
       }
 
-      // Close modal if clicked outside
-      window.onclick = function (e) {
-        if (e.target.classList.contains("modal")) {
-          closeEdit();
-          closeDelete();
-        }
-      };
+      /* UTIL */
+      function formatDate(dt) {
+        return new Date(dt).toLocaleString("id-ID", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        });
+      }
+
+      function cleanFileName(name) {
+        return name.replace(/^\d+_/, "");
+      }
+
+      loadFinalThesis();
     </script>
   </body>
 </html>

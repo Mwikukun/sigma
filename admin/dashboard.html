@@ -1,21 +1,17 @@
-<?php
-session_start();
-if (!isset($_SESSION['admin_logged_in'])) {
-  header("Location: login_admin.html");
-  exit;
-}
-?>
 <!DOCTYPE html>
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SIGMA - Dashboard Admin</title>
+    <script src="js/auth.js"></script>
+
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/dashboard.css" />
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script defer src="js/script.js"></script>
   </head>
+
   <body>
     <div class="container">
       <!-- Sidebar -->
@@ -24,31 +20,49 @@ if (!isset($_SESSION['admin_logged_in'])) {
 
         <p class="section-title">Main</p>
         <ul>
-          <li class="active"><i class="fa fa-house"></i> Dashboard</li>
+          <a href="dashboard.html"
+            ><li><i class="fa fa-house"></i> Dashboard</li></a
+          >
           <a href="user_management.html"
             ><li><i class="fa fa-users"></i> User Management</li></a
           >
-          <a href="document.html"
-            ><li><i class="fa fa-file-alt"></i> Document</li></a
+          <a href="document.html" class="active"
+            ><li><i class="fa fa-file-alt"></i> Final Thesis</li></a
           >
           <a href="announcement.html"
             ><li><i class="fa fa-bullhorn"></i> Announcement</li></a
           >
-        </ul>
-
-        <p class="section-title">Other</p>
-        <ul>
-          <li><i class="fa fa-database"></i> Logs</li>
         </ul>
       </aside>
 
       <!-- Main Content -->
       <main class="main-content">
         <div class="topbar">
-          <h2>Dashboard <span>Welcome, Admin1</span></h2>
+          <h2>Dashboard <span id="welcomeText">Welcome</span></h2>
           <div class="topbar-icons">
-            <i class="fa fa-user-circle"></i>
-            <i class="fa fa-cog"></i>
+            <div class="profile-wrapper">
+              <button id="profileBtn" class="profile-btn">👤</button>
+
+              <div class="profile-menu" id="profileMenu">
+                <button onclick="openProfile()">Edit Profile</button>
+                <button class="logout" onclick="logout()">Logout</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal" id="profileModal">
+          <div class="modal-box">
+            <h3>Edit Profile</h3>
+
+            <input type="text" id="profileName" placeholder="Nama Lengkap" />
+            <input type="password" id="oldPassword" placeholder="Password Lama" />
+            <input type="password" id="newPassword" placeholder="Password Baru" />
+
+            <div class="modal-actions">
+              <button onclick="saveProfile()">Simpan</button>
+              <button onclick="closeProfile()">Batal</button>
+            </div>
           </div>
         </div>
 
@@ -56,19 +70,19 @@ if (!isset($_SESSION['admin_logged_in'])) {
         <div class="cards">
           <div class="card">
             <h3>Total Users</h3>
-            <p>4 Users</p>
-          </div>
-          <div class="card">
-            <h3>Pending Reviews</h3>
-            <p>1 Document</p>
+            <p id="totalUsers">-</p>
           </div>
           <div class="card">
             <h3>Total Document</h3>
-            <p>4 Documents</p>
+            <p id="totalDocs">-</p>
           </div>
           <div class="card">
-            <h3>Active Users</h3>
-            <p>4 Users</p>
+            <h3>Pending Reviews</h3>
+            <p id="pendingDocs">-</p>
+          </div>
+          <div class="card">
+            <h3>Active Announcements</h3>
+            <p id="activeAnn">-</p>
           </div>
         </div>
 
@@ -77,26 +91,161 @@ if (!isset($_SESSION['admin_logged_in'])) {
           <div class="chart-card card">
             <h3>Document Status</h3>
             <canvas id="docChart"></canvas>
-            <div class="legend">
-              <span><span class="dot pending"></span> Pending</span>
-              <span><span class="dot approved"></span> Approved</span>
-              <span><span class="dot revised"></span> Revised</span>
-            </div>
           </div>
 
           <div class="activity-card card">
             <h3>Recent Activity</h3>
-            <ul class="activity-list">
-              <li><strong>3 July 2025, 11:50pm</strong> — Bab 4 (Aplikasi Katalog) was submitted (Revisi) by Mhs4</li>
-              <li><strong>2 July 2025, 11:35pm</strong> — Bab 3 (Aplikasi Game) was approved (Disetujui) by Mhs3</li>
-              <li><strong>1 July 2025, 11:50pm</strong> — Bab 2 (Aplikasi Belanja) was submitted (Revisi) by Mhs2</li>
-              <li class="inactive"><strong>1 July 2025, 11:35pm</strong> — Bab 1 (Aplikasi Belajar) was submitted (Pending) by Mhs1</li>
+            <ul class="activity-list" id="activityList">
+              <li style="text-align: center">Loading...</li>
             </ul>
           </div>
         </div>
       </main>
     </div>
 
+    <!-- Font Awesome -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+
+    <!-- DASHBOARD LOGIC -->
+    <script>
+      const profileBtn = document.getElementById("profileBtn");
+      const profileMenu = document.getElementById("profileMenu");
+      const profileModal = document.getElementById("profileModal");
+
+      /* ===== TOGGLE DROPDOWN ===== */
+      profileBtn.addEventListener("click", (e) => {
+        e.stopPropagation(); // ⬅️ penting
+        profileMenu.classList.toggle("show");
+      });
+
+      /* ===== CLOSE DROPDOWN CLICK OUTSIDE ===== */
+      document.addEventListener("click", () => {
+        profileMenu.classList.remove("show");
+      });
+
+      /* ===== OPEN MODAL FROM MENU ===== */
+      function openProfile() {
+        profileMenu.classList.remove("show");
+        profileModal.classList.add("show");
+      }
+
+      function closeProfile() {
+        profileModal.classList.remove("show");
+      }
+
+      profileModal.addEventListener("click", (e) => {
+        if (e.target === profileModal) closeProfile();
+      });
+
+      function logout() {
+        if (!confirm("Yakin mau logout?")) return;
+
+        fetch(BASE_URL + "logout.php", {
+          credentials: "include",
+        }).then(() => {
+          window.location.href = "login_admin.html";
+        });
+      }
+
+      async function saveProfile() {
+        const fd = new FormData();
+        fd.append("name", document.getElementById("profileName").value);
+        fd.append("old_password", document.getElementById("oldPassword").value);
+        fd.append("new_password", document.getElementById("newPassword").value);
+
+        const res = await fetch(BASE_URL + "update_profile.php", {
+          method: "POST",
+          body: fd,
+          credentials: "include",
+        });
+
+        const d = await res.json();
+        if (d.success) {
+          alert("Profile updated");
+          closeProfile();
+          loadProfile();
+        } else {
+          alert(d.msg);
+        }
+      }
+
+      /* ========= LOAD PROFILE ========= */
+      async function loadProfile() {
+        const d = await safeFetch(BASE_URL + "get_profile.php");
+
+        if (d.success) {
+          document.getElementById("welcomeText").innerText = "Welcome, " + d.name;
+          document.getElementById("profileName").value = d.name;
+        }
+      }
+
+      /* ========= DASHBOARD ========= */
+      async function loadSummary() {
+        const d = await safeFetch(BASE_URL + "dashboard_summary.php");
+
+        document.getElementById("totalUsers").innerText = d.total_users + " Users";
+        document.getElementById("totalDocs").innerText = d.total_documents + " Documents";
+        document.getElementById("pendingDocs").innerText = d.pending_documents + " Document";
+        document.getElementById("activeAnn").innerText = d.active_announcements + " Announcements";
+      }
+
+      async function safeFetch(url) {
+        const res = await fetch(url, { credentials: "include" });
+
+        if (!res.ok) {
+          if (res.status === 401) {
+            window.location.replace("login_admin.html");
+          }
+          throw new Error("Fetch failed: " + url);
+        }
+
+        return res.json();
+      }
+      async function loadChart() {
+        const d = await safeFetch(window.BASE_URL + "dashboard_chart.php");
+
+        new Chart(document.getElementById("docChart"), {
+          type: "doughnut",
+          data: {
+            labels: ["Pending", "Approved", "Revised"],
+            datasets: [
+              {
+                data: [d.pending ?? 0, d.approved ?? 0, d.revised ?? 0],
+              },
+            ],
+          },
+        });
+      }
+
+      async function loadActivity() {
+        const data = await safeFetch(BASE_URL + "dashboard_activity.php");
+
+        const ul = document.getElementById("activityList");
+        ul.innerHTML = "";
+
+        if (!data.length) {
+          ul.innerHTML = "<li>No recent activity</li>";
+          return;
+        }
+
+        data.forEach((a) => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+      <strong>${new Date(a.created_at).toLocaleString()}</strong>
+      — ${a.title} (${a.status}) by ${a.name}
+    `;
+          ul.appendChild(li);
+        });
+      }
+
+      /* ========= INIT ========= */
+      window.addEventListener("load", async () => {
+        // auth.js sudah ngecek login
+        await loadProfile();
+        await loadSummary();
+        await loadChart();
+        await loadActivity();
+      });
+    </script>
   </body>
 </html>

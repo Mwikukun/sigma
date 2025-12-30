@@ -2,48 +2,67 @@
 include 'cors.php';
 include "config_api.php";
 
-// 🔹 Ambil input dari Flutter
-$student_id = $_POST['student_id'] ?? null;      // -> pakai student_number
-$lecturer_id = $_POST['lecturer_id'] ?? null;    // -> pakai employee_number
+/* =========================
+   HELPER ACTIVITY LOG
+========================= */
+function logActivity($conn, $lecturer_id, $student_id, $type, $desc) {
+    $stmt = $conn->prepare("
+        INSERT INTO activity_logs 
+        (lecturer_id, student_id, activity_type, description)
+        VALUES (?, ?, ?, ?)
+    ");
+    $stmt->bind_param("iiss", $lecturer_id, $student_id, $type, $desc);
+    $stmt->execute();
+}
+
+/* =========================
+   AMBIL DATA
+========================= */
+$student_id   = $_POST['student_id'] ?? null;
+$lecturer_id  = $_POST['lecturer_id'] ?? null;
 $thesis_title = $_POST['thesis_title'] ?? null;
 
-// 🔹 Validasi input
 if (!$student_id || !$lecturer_id || !$thesis_title) {
     echo json_encode(["success" => false, "message" => "Data tidak lengkap."]);
     exit;
 }
 
-// =============================================================
-// 1️⃣ CEK APAKAH DOSEN ADA DI DATABASE
-// =============================================================
-$lecturerCheck = $conn->query("SELECT employee_number FROM lecturers WHERE employee_number = '$lecturer_id'");
+/* =========================
+   CEK DOSEN
+========================= */
+$lecturerCheck = $conn->query("
+    SELECT employee_number 
+    FROM lecturers 
+    WHERE employee_number = '$lecturer_id'
+");
 if ($lecturerCheck->num_rows == 0) {
     echo json_encode([
         "success" => false,
-        "message" => "Dosen dengan NIK $lecturer_id tidak ditemukan di database."
+        "message" => "Dosen dengan NIK $lecturer_id tidak ditemukan."
     ]);
     exit;
 }
 
-// =============================================================
-// 2️⃣ CEK APAKAH MAHASISWA SUDAH PUNYA PENGAJUAN AKTIF
-// =============================================================
+/* =========================
+   CEK PENGAJUAN AKTIF
+========================= */
 $checkActive = $conn->query("
-    SELECT * FROM guidances 
+    SELECT * 
+    FROM guidances 
     WHERE student_id = '$student_id' 
     AND is_approved = 0
 ");
 if ($checkActive->num_rows > 0) {
     echo json_encode([
         "success" => false,
-        "message" => "Anda sudah memiliki pengajuan aktif. Harap tunggu konfirmasi dosen."
+        "message" => "Anda sudah memiliki pengajuan aktif."
     ]);
     exit;
 }
 
-// =============================================================
-// 3️⃣ CEK APAKAH DOSEN SUDAH PENUH
-// =============================================================
+/* =========================
+   CEK SLOT DOSEN
+========================= */
 $count = $conn->query("
     SELECT COUNT(*) AS total 
     FROM guidances 
@@ -59,9 +78,9 @@ if ($count['total'] >= 10) {
     exit;
 }
 
-// =============================================================
-// 4️⃣ SIMPAN PENGAJUAN BARU KE GUIDANCES
-// =============================================================
+/* =========================
+   INSERT GUIDANCE
+========================= */
 $insert = $conn->query("
     INSERT INTO guidances (student_id, lecturer_id, is_approved)
     VALUES ('$student_id', '$lecturer_id', 0)
@@ -76,30 +95,52 @@ if (!$insert) {
     exit;
 }
 
-// =============================================================
-// 5️⃣ UPDATE JUDUL SKRIPSI DI TABEL STUDENTS
-// =============================================================
-$updateStudent = $conn->query("
+/* =========================
+   AMBIL NAMA MAHASISWA
+========================= */
+$studentQuery = $conn->query("
+    SELECT u.name 
+    FROM students s 
+    JOIN users u ON s.user_id = u.id 
+    WHERE s.student_number = '$student_id'
+");
+$student_name = $studentQuery->fetch_assoc()['name'] ?? "Mahasiswa";
+
+/* =========================
+   NOTIFIKASI DOSEN
+========================= */
+$title = "Pengajuan Bimbingan Baru";
+$desc  = "$student_name mengajukan bimbingan dengan judul: $thesis_title";
+
+$notif = $conn->prepare("
+    INSERT INTO notifications (student_id, lecturer_id, title, description)
+    VALUES (?, ?, ?, ?)
+");
+$notif->bind_param("iiss", $student_id, $lecturer_id, $title, $desc);
+$notif->execute();
+
+/* =========================
+   🆕 ACTIVITY LOG
+========================= */
+logActivity(
+    $conn,
+    $lecturer_id,
+    $student_id,
+    "guidance_request",
+    $desc
+);
+
+/* =========================
+   UPDATE JUDUL SKRIPSI
+========================= */
+$conn->query("
     UPDATE students 
     SET thesis = '$thesis_title' 
     WHERE student_number = '$student_id'
 ");
 
-if (!$updateStudent) {
-    echo json_encode([
-        "success" => true,
-        "message" => "Pengajuan berhasil, tapi gagal memperbarui judul mahasiswa.",
-        "debug" => $conn->error
-    ]);
-    exit;
-}
-
-// =============================================================
-// ✅ SEMUA BERHASIL
-// =============================================================
 echo json_encode([
     "success" => true,
     "message" => "Pengajuan berhasil dikirim. Menunggu konfirmasi dosen."
 ]);
-exit;
 ?>

@@ -1,6 +1,9 @@
 <?php
-include "config.php";
+
 header("Content-Type: application/json");
+
+require_once "guard.php";
+require_once "config.php";
 
 $query = "SELECT id, title FROM study_programs ORDER BY id ASC";
 $result = mysqli_query($conn, $query);
