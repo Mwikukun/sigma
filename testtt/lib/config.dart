@@ -1,3 +1,3 @@
-  class Config {
-    static const String baseUrl = "http://127.0.0.1/SIGMA/api/";
-  }
+class Config {
+  static const String baseUrl = "http://127.0.0.1/SIGMA/api/";
+}

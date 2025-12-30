@@ -146,7 +146,7 @@ class _DashboardHomeState extends State<_DashboardHome> {
   // ================= PROFILE =================
   String name = "";
   String nim = "";
-  String prodi = "";
+  String judulThesis = "";
 
   // ================= UPCOMING =================
   List upcoming = [];
@@ -167,7 +167,11 @@ class _DashboardHomeState extends State<_DashboardHome> {
       setState(() {
         name = data["data"]["name"];
         nim = data["data"]["student_number"].toString();
-        prodi = data["data"]["study_program"] ?? "-";
+        judulThesis =
+            (data["data"]["thesis"] == null ||
+                data["data"]["thesis"].toString().isEmpty)
+            ? "Belum ada judul TA"
+            : data["data"]["thesis"];
       });
     }
   }
@@ -468,7 +472,16 @@ class _DashboardHomeState extends State<_DashboardHome> {
                 const SizedBox(height: 4),
                 Text(nim, style: const TextStyle(fontFamily: 'Poppins')),
                 const SizedBox(height: 2),
-                Text(prodi, style: const TextStyle(fontFamily: 'Poppins')),
+                Text(
+                  judulThesis,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 13,
+                    color: Colors.black87,
+                  ),
+                ),
               ],
             ),
           ),

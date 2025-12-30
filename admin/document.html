@@ -121,9 +121,11 @@
         <table>
           <thead>
             <tr>
-              <th>Nama Dokumen</th>
+              <th>NIM</th>
               <th>Pemilik</th>
+              <th>Dosen Pembimbing</th>
               <th>Judul TA</th>
+              <th>Nama Dokumen</th>
               <th>Waktu Upload</th>
               <th>Aksi</th>
             </tr>
@@ -193,19 +195,21 @@
 
         pageData.forEach((d) => {
           table.innerHTML += `
-      <tr>
-        <td>
-          <a href="../uploads/documents/${d.nama_dokumen}" target="_blank">
-            ${cleanFileName(d.nama_dokumen)}
-          </a>
-        </td>
-        <td>${d.pemilik}</td>
-        <td>${d.judul_ta}</td>
-        <td>${formatDate(d.waktu_upload)}</td>
-        <td>
-          <span onclick="openDelete('${cleanFileName(d.nama_dokumen)}', ${d.id})">🗑️</span>
-        </td>
-      </tr>
+            <tr>
+          <td>${d.nim}</td>
+          <td>${d.pemilik}</td>
+          <td>${d.dosen ?? "-"}</td>
+          <td>${d.judul_ta}</td>
+          <td>
+            <a href="../uploads/documents/${d.nama_dokumen}" target="_blank">
+              ${cleanFileName(d.nama_dokumen)}
+            </a>
+          </td>
+          <td>${formatDate(d.waktu_upload)}</td>
+          <td>
+            <span onclick="openDelete('${cleanFileName(d.nama_dokumen)}', ${d.id})">🗑️</span>
+          </td>
+        </tr>
     `;
         });
 
@@ -233,7 +237,7 @@
       /* SEARCH */
       searchBox.addEventListener("input", () => {
         const q = searchBox.value.toLowerCase();
-        filteredData = allData.filter((d) => d.nama_dokumen.toLowerCase().includes(q) || d.pemilik.toLowerCase().includes(q) || d.judul_ta.toLowerCase().includes(q));
+        filteredData = allData.filter((d) => d.nim.includes(q) || d.pemilik.toLowerCase().includes(q) || (d.dosen ?? "").toLowerCase().includes(q) || d.judul_ta.toLowerCase().includes(q));
         currentPage = 1;
         renderTable();
       });

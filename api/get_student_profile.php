@@ -8,12 +8,9 @@ $query = "
   SELECT 
     u.name,
     s.student_number,
-    sp.title AS study_program
+    s.thesis
   FROM students s
   JOIN users u ON u.id = s.user_id
-  LEFT JOIN guidances g ON g.student_id = s.student_number
-  LEFT JOIN lecturers l ON l.employee_number = g.lecturer_id
-  LEFT JOIN study_programs sp ON sp.id = l.study_program_id
   WHERE s.student_number = ?
   LIMIT 1
 ";
@@ -29,5 +26,8 @@ if ($res->num_rows > 0) {
     "data" => $res->fetch_assoc()
   ]);
 } else {
-  echo json_encode(["success" => false]);
+  echo json_encode([
+    "success" => false,
+    "message" => "Data mahasiswa tidak ditemukan"
+  ]);
 }

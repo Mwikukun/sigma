@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 29 Des 2025 pada 06.15
+-- Waktu pembuatan: 30 Des 2025 pada 19.47
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -43,7 +43,7 @@ CREATE TABLE `activities` (
 --
 
 INSERT INTO `activities` (`id`, `student_id`, `section`, `title`, `description`, `start_date`, `due_date`, `percentage`) VALUES
-(14, 4342411024, 'to-do', 'Bab1', 'Ya begini la', '0000-00-00', '2025-12-20', 0),
+(14, 4342411024, 'in-progress', 'Bab1', 'Ya begini la', '0000-00-00', '2025-12-20', 50),
 (15, 4342411024, 'to-do', 'Bab 2', 'YAA', '0000-00-00', '2025-12-27', 0),
 (16, 4342411024, 'to-do', 'Bab 3', 'WUUUU', '0000-00-00', '2025-12-31', 0),
 (17, 4342411024, 'to-do', 'Bab 4', 'TTT', '0000-00-00', '2026-01-10', 0),
@@ -76,7 +76,9 @@ INSERT INTO `activity_logs` (`id`, `lecturer_id`, `student_id`, `activity_type`,
 (2, 221345, 4342411010, 'guidance_request', 'ABI mengajukan bimbingan dengan judul: test', '2025-12-21 19:34:48'),
 (3, 221345, 4342411024, 'schedule_request', 'Nauval mengajukan jadwal bimbingan.', '2025-12-21 20:35:08'),
 (4, 221345, 4342411010, 'guidance_request', 'ABI mengajukan bimbingan dengan judul: wee', '2025-12-27 13:48:28'),
-(5, 221345, 4342411010, 'guidance_request', 'ABI mengajukan bimbingan dengan judul: Dota 13', '2025-12-28 16:10:49');
+(5, 221345, 4342411010, 'guidance_request', 'ABI mengajukan bimbingan dengan judul: Dota 13', '2025-12-28 16:10:49'),
+(6, 221345, 4342411010, 'guidance_request', 'ABI mengajukan bimbingan dengan judul: Dota 13', '2025-12-30 23:22:23'),
+(7, 221345, 4342411010, 'guidance_request', 'ABI mengajukan bimbingan dengan judul: Dota 13', '2025-12-30 23:50:29');
 
 -- --------------------------------------------------------
 
@@ -210,7 +212,7 @@ INSERT INTO `guidances` (`id`, `student_id`, `lecturer_id`, `is_approved`, `crea
 (11, 4342411023, 221345, 2, '2025-11-10 08:20:30'),
 (12, 434241100, 221345, 2, '2025-11-10 08:20:30'),
 (13, 4342411001, 221345, 2, '2025-11-10 08:20:30'),
-(14, 4342411005, 221345, 1, '2025-11-10 08:20:30'),
+(14, 4342411005, 221345, 3, '2025-11-10 08:20:30'),
 (15, 4342411006, 221345, 1, '2025-11-10 08:20:30'),
 (16, 4342411030, 221345, 3, '2025-11-10 08:20:30'),
 (17, 4342411001, 221345, 2, '2025-11-14 06:33:30'),
@@ -225,7 +227,9 @@ INSERT INTO `guidances` (`id`, `student_id`, `lecturer_id`, `is_approved`, `crea
 (26, 4342411000, 221345, 3, '2025-12-16 06:13:33'),
 (27, 4342411010, 221345, 2, '2025-12-21 12:34:48'),
 (28, 4342411010, 221345, 2, '2025-12-27 06:48:28'),
-(29, 4342411010, 221345, 0, '2025-12-28 09:10:49');
+(29, 4342411010, 221345, 2, '2025-12-28 09:10:49'),
+(30, 4342411010, 221345, 2, '2025-12-30 16:22:23'),
+(31, 4342411010, 221345, 0, '2025-12-30 16:50:29');
 
 -- --------------------------------------------------------
 
@@ -300,7 +304,9 @@ INSERT INTO `notifications` (`id`, `student_id`, `lecturer_id`, `title`, `descri
 (27, 4342411010, 221345, 'Pengajuan Bimbingan Baru', 'ABI mengajukan bimbingan dengan judul: test'),
 (28, 4342411024, 221345, 'Pengajuan Jadwal Baru', 'Nauval mengajukan jadwal bimbingan.'),
 (29, 4342411010, 221345, 'Pengajuan Bimbingan Baru', 'ABI mengajukan bimbingan dengan judul: wee'),
-(30, 4342411010, 221345, 'Pengajuan Bimbingan Baru', 'ABI mengajukan bimbingan dengan judul: Dota 13');
+(30, 4342411010, 221345, 'Pengajuan Bimbingan Baru', 'ABI mengajukan bimbingan dengan judul: Dota 13'),
+(31, 4342411010, 221345, 'Pengajuan Bimbingan Baru', 'ABI mengajukan bimbingan dengan judul: Dota 13'),
+(32, 4342411010, 221345, 'Pengajuan Bimbingan Baru', 'ABI mengajukan bimbingan dengan judul: Dota 13');
 
 -- --------------------------------------------------------
 
@@ -622,7 +628,7 @@ ALTER TABLE `activities`
 -- AUTO_INCREMENT untuk tabel `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT untuk tabel `announcements`
@@ -652,7 +658,7 @@ ALTER TABLE `final_thesises`
 -- AUTO_INCREMENT untuk tabel `guidances`
 --
 ALTER TABLE `guidances`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT untuk tabel `majors`
@@ -664,7 +670,7 @@ ALTER TABLE `majors`
 -- AUTO_INCREMENT untuk tabel `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT untuk tabel `notification_settings`
